@@ -56,7 +56,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
         Type = "Task"
         Resource = "arn:aws:states:::sagemaker:createTrainingJob.sync"
         Parameters = {
-          TrainingJobName = "training-${uuid()}"
+          "TrainingJobName.$"= "States.Format('training-{}', States.UUID())",
           AlgorithmSpecification = {
             TrainingImage = "382416733822.dkr.ecr.us-east-1.amazonaws.com/linear-learner:1"
             TrainingInputMode = "File"
@@ -98,7 +98,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             "predictor_type"     = "regressor"
             "epochs"             = "100"
             "feature_dim"        = "1"  # We have one feature (date)
-            "mini_batch_size"    = "100"
+            "mini_batch_size"    = "10"
             "num_models"         = "auto"
             "loss"              = "absolute_loss"
             "wd"                = "auto"  # L2 regularization

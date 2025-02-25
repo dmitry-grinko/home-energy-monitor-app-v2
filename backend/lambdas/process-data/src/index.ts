@@ -109,6 +109,15 @@ const processDataForSageMaker = (records: EnergyUsageRecord[]): { training: stri
     .map(record => `${record.daysSinceStart},${record.EnergyUsage}`)
     .join('\n');
 
+  log.info('Processed data details', {
+    trainingRecordCount: trainingRecords.length,
+    validationRecordCount: validationRecords.length,
+    trainingCsvLength: trainingCsv.length,
+    validationCsvLength: validationCsv.length,
+    sampleTrainingRecord: trainingRecords[0],
+    sampleProcessedTraining: trainingCsv.split('\n')[0]
+  });
+
   return { training: trainingCsv, validation: validationCsv };
 };
 
