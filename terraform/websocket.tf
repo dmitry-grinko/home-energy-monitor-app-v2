@@ -74,7 +74,7 @@ resource "aws_apigatewayv2_integration" "websocket_connect" {
   connection_type           = "INTERNET"
   content_handling_strategy = "CONVERT_TO_TEXT"
   integration_method        = "POST"
-  integration_uri          = module.lambda_connection.function_invoke_arn
+  integration_uri          = module.lambda_connection.function_arn
   passthrough_behavior     = "WHEN_NO_MATCH"
 
   credentials_arn = aws_iam_role.apigateway_websocket.arn
@@ -87,7 +87,7 @@ resource "aws_apigatewayv2_integration" "websocket_disconnect" {
   connection_type           = "INTERNET"
   content_handling_strategy = "CONVERT_TO_TEXT"
   integration_method        = "POST"
-  integration_uri          = module.lambda_connection.function_invoke_arn
+  integration_uri          = module.lambda_connection.function_arn
   passthrough_behavior     = "WHEN_NO_MATCH"
 
   credentials_arn = aws_iam_role.apigateway_websocket.arn
@@ -101,7 +101,7 @@ resource "aws_apigatewayv2_integration" "websocket_default" {
   connection_type           = "INTERNET"
   content_handling_strategy = "CONVERT_TO_TEXT"
   integration_method        = "POST"
-  integration_uri          = module.lambda_websocket.function_invoke_arn
+  integration_uri          = module.lambda_websocket.function_arn
   passthrough_behavior     = "WHEN_NO_MATCH"
 
   credentials_arn = aws_iam_role.apigateway_websocket.arn
