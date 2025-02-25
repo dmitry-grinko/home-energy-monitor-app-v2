@@ -69,14 +69,6 @@ module "cognito" {
   tags   = local.tags
 }
 
-resource "aws_lambda_permission" "allow_s3" {
-  statement_id  = "AllowS3Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = module.lambda_trigger.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = module.s3_csv_storage.bucket_arn
-}
-
 resource "aws_s3_bucket_notification" "bucket_notification" {
   bucket = module.s3_csv_storage.bucket_id
 
@@ -88,7 +80,6 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   }
 
   depends_on = [
-    aws_lambda_permission.allow_s3,
     module.s3_csv_storage
   ]
 }
@@ -293,14 +284,6 @@ resource "aws_iam_role_policy_attachment" "sagemaker_cloudwatch_policy" {
 resource "aws_iam_role_policy_attachment" "sagemaker_full_access" {
   role       = aws_iam_role.sagemaker_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_lambda_permission" "websocket_connection" {
-  statement_id  = "AllowWebSocketInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = module.lambda_connection.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.websocket.execution_arn}/*"
 }
 
 # Add Step Functions module
