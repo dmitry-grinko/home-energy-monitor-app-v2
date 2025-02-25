@@ -161,7 +161,9 @@ resource "aws_iam_role_policy" "step_functions_policy" {
         Action = [
           "sagemaker:CreateTrainingJob",
           "sagemaker:DescribeTrainingJob",
-          "sagemaker:StopTrainingJob"
+          "sagemaker:StopTrainingJob",
+          "sagemaker:ListTags",
+          "sagemaker:AddTags"
         ]
         Resource = "*"
       },
@@ -173,11 +175,32 @@ resource "aws_iam_role_policy" "step_functions_policy" {
           "logs:UpdateLogDelivery",
           "logs:DeleteLogDelivery",
           "logs:ListLogDeliveries",
+          "logs:PutLogEvents",
           "logs:PutResourcePolicy",
           "logs:DescribeResourcePolicies",
           "logs:DescribeLogGroups"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole"
+        ]
+        Resource = [
+          var.sagemaker_role_arn
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "events:PutTargets",
+          "events:PutRule",
+          "events:DescribeRule"
+        ]
+        Resource = [
+          "arn:aws:events:*:*:rule/StepFunctionsGetEventsForSageMakerTrainingJobsRule"
+        ]
       }
     ]
   })

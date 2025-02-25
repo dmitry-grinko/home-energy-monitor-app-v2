@@ -69,6 +69,15 @@ module "cognito" {
   tags   = local.tags
 }
 
+# Lambda permission for S3 bucket notification
+resource "aws_lambda_permission" "allow_bucket" {
+  statement_id  = "AllowS3BucketNotifications"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_trigger.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = module.s3_csv_storage.bucket_arn
+}
+
 resource "aws_s3_bucket_notification" "bucket_notification" {
   bucket = module.s3_csv_storage.bucket_id
 
@@ -80,6 +89,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   }
 
   depends_on = [
+    aws_lambda_permission.allow_bucket,
     module.s3_csv_storage
   ]
 }
@@ -265,12 +275,21 @@ resource "aws_iam_role_policy" "sagemaker_s3_policy" {
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:GetBucketLocation"
         ]
         Resource = [
           module.s3_csv_storage.bucket_arn,
           "${module.s3_csv_storage.bucket_arn}/*"
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = "*"
       }
     ]
   })
