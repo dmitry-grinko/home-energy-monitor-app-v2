@@ -92,16 +92,16 @@ const processDataForSageMaker = (records: EnergyUsageRecord[]): { training: stri
     validationCount: validationRecords.length
   });
 
-  // Create CSV header and content
-  const csvHeader = 'date,usage';
+  // Create CSV header and content - Linear Learner expects label first, then features
+  const csvHeader = 'usage,date';  // Changed order: label first, then features
   const trainingCsv = [
     csvHeader,
-    ...trainingRecords.map(record => `${record.Date},${record.EnergyUsage}`)
+    ...trainingRecords.map(record => `${record.EnergyUsage},${record.Date}`)  // Label first
   ].join('\n');
 
   const validationCsv = [
     csvHeader,
-    ...validationRecords.map(record => `${record.Date},${record.EnergyUsage}`)
+    ...validationRecords.map(record => `${record.EnergyUsage},${record.Date}`)  // Label first
   ].join('\n');
 
   return { training: trainingCsv, validation: validationCsv };

@@ -57,7 +57,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
         Parameters = {
           TrainingJobName = "training-${uuid()}"
           AlgorithmSpecification = {
-            TrainingImage = "683313688378.dkr.ecr.us-east-1.amazonaws.com/sagemaker-xgboost:1.5-1"
+            TrainingImage = "382416733822.dkr.ecr.us-east-1.amazonaws.com/linear-learner:1"
             TrainingInputMode = "File"
           }
           RoleArn = var.sagemaker_role_arn
@@ -77,7 +77,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
               ChannelName = "validation"
               DataSource = {
                 S3DataSource = {
-                  "S3Uri.$"= "$.paths.validationPath"
+                  "S3Uri.$" = "$.paths.validationPath"
                   S3DataType = "S3Prefix"
                   S3DataDistributionType = "FullyReplicated"
                 }
@@ -94,20 +94,14 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             VolumeSizeInGB = 10
           }
           HyperParameters = {
-            "objective"           = "reg:squarederror"
-            "num_round"          = "100"
-            "max_depth"          = "3"
-            "eta"                = "0.2"
-            "gamma"              = "4"
-            "min_child_weight"   = "6"
-            "subsample"          = "0.7"
-            "verbosity"          = "2"
-            "eval_metric"        = "rmse"
-            "nthread"            = "4"
-            "silent"             = "0"
-            "csv_weights"        = "0"
-            "num_class"          = "1"
-            "early_stopping_rounds" = "10"
+            "predictor_type"     = "regressor"
+            "epochs"             = "100"
+            "feature_dim"        = "1"  # We have one feature (date)
+            "mini_batch_size"    = "100"
+            "num_models"         = "auto"
+            "loss"              = "absolute_loss"
+            "wd"                = "auto"  # L2 regularization
+            "learning_rate"     = "auto"
           }
           StoppingCondition = {
             MaxRuntimeInSeconds = 3600
