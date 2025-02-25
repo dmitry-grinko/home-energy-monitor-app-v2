@@ -91,11 +91,8 @@ const processDataForSageMaker = (records: EnergyUsageRecord[]): string => {
 };
 
 const saveToS3 = async (data: string): Promise<string> => {
-  // Simplify timestamp to be more SageMaker-friendly
-  const timestamp = new Date().getTime();
-  
-  // Simplify the key format
-  const key = `model/training-${timestamp}.csv`;
+  // Use a fixed key instead of timestamp-based
+  const key = 'model/training-data.csv';
 
   log.info('Saving data to S3', {
     bucket: BUCKET_NAME,
@@ -111,7 +108,6 @@ const saveToS3 = async (data: string): Promise<string> => {
       ContentType: 'text/csv'
     }));
 
-    // Ensure S3 URI format matches exactly what SageMaker expects
     const s3Uri = `s3://${BUCKET_NAME}/${key}`;
     log.info('Data saved successfully', { s3Uri });
     return s3Uri;

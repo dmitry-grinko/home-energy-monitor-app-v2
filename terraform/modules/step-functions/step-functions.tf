@@ -62,11 +62,11 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
           RoleArn = var.sagemaker_role_arn
           InputDataConfig = [
             {
-              ChannelName = "train"
+              ChannelName = "training"
               DataSource = {
                 S3DataSource = {
+                  S3Uri = "s3://${var.bucket_name}/model/training-data.csv"
                   S3DataType = "S3Prefix"
-                  S3Uri = "States.JsonToString($.s3Path)"
                   S3DataDistributionType = "FullyReplicated"
                 }
               }
