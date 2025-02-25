@@ -1,5 +1,5 @@
 {
-  "name": "home-energy-monitor-app",
+  "name": "home-energy-monitor-app-v2",
   "version": "0.1.0",
   "description": "Home Energy Monitor App",
   "main": "index.js",
@@ -8,15 +8,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dmitry-grinko/home-energy-monitor-app.git"
+    "url": "git+https://github.com/dmitry-grinko/home-energy-monitor-app-v2.git"
   },
   "keywords": [],
   "author": "Dmitry Grinko <dm.grinko@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dmitry-grinko/home-energy-monitor-app/issues"
+    "url": "https://github.com/dmitry-grinko/home-energy-monitor-app-v2/issues"
   },
-  "homepage": "https://github.com/dmitry-grinko/home-energy-monitor-app#readme",
+  "homepage": "https://github.com/dmitry-grinko/home-energy-monitor-app-v2#readme",
   "devDependencies": {
     "husky": "^9.1.7"
   }
