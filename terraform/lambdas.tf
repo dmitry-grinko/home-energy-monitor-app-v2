@@ -608,7 +608,7 @@ module "lambda_save_model" {
             Action = [
               "ssm:PutParameter"
             ]
-            Resource = aws_ssm_parameter.sagemaker_endpoint.arn
+            Resource = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/sagemaker/endpoint-url"
           }
         ]
       })
