@@ -18,6 +18,7 @@ const routeSettings: RouteSettings[] = [
   { path: 'presigned-url', accessToken: true, idToken: true },
   { path: 'prediction', accessToken: true, idToken: true },
   { path: 'model', accessToken: true, idToken: true }, // run step functions
+  { path: 'execute', accessToken: true, idToken: true }, // send email
   // Default settings for other routes
   { path: '/', accessToken: false, idToken: false }
 ];

@@ -9,7 +9,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
       ProcessData = {
         Type = "Task"
         Resource = var.process_data_lambda_arn
-        Next = "TrainModel"
+        Next = "NotifyProcessDataComplete"
         Retry = [
           {
             ErrorEquals = ["States.ALL"]
@@ -21,7 +21,32 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
         Catch = [
           {
             ErrorEquals = ["States.ALL"]
-            Next = "HandleError"
+            Next = "NotifyError"
+          }
+        ]
+      }
+      NotifyProcessDataComplete = {
+        Type = "Task"
+        Resource = "arn:aws:states:::sns:publish"
+        Parameters = {
+          TopicArn = var.websocket_sns_topic_arn
+          Message = {
+            "type": "ML_PIPELINE_STATUS"
+            "data": {
+              "step": "ProcessData"
+              "status": "SUCCEEDED"
+              "executionId.$": "$$.Execution.Id"
+              "timestamp.$": "$$.State.EnteredTime"
+            }
+          }
+        }
+        Next = "TrainModel"
+        Retry = [
+          {
+            ErrorEquals = ["States.ALL"]
+            IntervalSeconds = 2
+            MaxAttempts = 3
+            BackoffRate = 2
           }
         ]
       }
@@ -60,7 +85,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             MaxRuntimeInSeconds = 3600
           }
         }
-        Next = "SaveModel"
+        Next = "NotifyTrainModelComplete"
         Retry = [
           {
             ErrorEquals = ["States.ALL"]
@@ -72,14 +97,39 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
         Catch = [
           {
             ErrorEquals = ["States.ALL"]
-            Next = "HandleError"
+            Next = "NotifyError"
+          }
+        ]
+      }
+      NotifyTrainModelComplete = {
+        Type = "Task"
+        Resource = "arn:aws:states:::sns:publish"
+        Parameters = {
+          TopicArn = var.websocket_sns_topic_arn
+          Message = {
+            "type": "ML_PIPELINE_STATUS"
+            "data": {
+              "step": "TrainModel"
+              "status": "SUCCEEDED"
+              "executionId.$": "$$.Execution.Id"
+              "timestamp.$": "$$.State.EnteredTime"
+            }
+          }
+        }
+        Next = "SaveModel"
+        Retry = [
+          {
+            ErrorEquals = ["States.ALL"]
+            IntervalSeconds = 2
+            MaxAttempts = 3
+            BackoffRate = 2
           }
         ]
       }
       SaveModel = {
         Type = "Task"
         Resource = var.save_model_lambda_arn
-        End = true
+        Next = "NotifySaveModelComplete"
         Retry = [
           {
             ErrorEquals = ["States.ALL"]
@@ -91,7 +141,59 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
         Catch = [
           {
             ErrorEquals = ["States.ALL"]
-            Next = "HandleError"
+            Next = "NotifyError"
+          }
+        ]
+      }
+      NotifySaveModelComplete = {
+        Type = "Task"
+        Resource = "arn:aws:states:::sns:publish"
+        Parameters = {
+          TopicArn = var.websocket_sns_topic_arn
+          Message = {
+            "type": "ML_PIPELINE_STATUS"
+            "data": {
+              "step": "SaveModel"
+              "status": "SUCCEEDED"
+              "executionId.$": "$$.Execution.Id"
+              "timestamp.$": "$$.State.EnteredTime"
+            }
+          }
+        }
+        End = true
+        Retry = [
+          {
+            ErrorEquals = ["States.ALL"]
+            IntervalSeconds = 2
+            MaxAttempts = 3
+            BackoffRate = 2
+          }
+        ]
+      }
+      NotifyError = {
+        Type = "Task"
+        Resource = "arn:aws:states:::sns:publish"
+        Parameters = {
+          TopicArn = var.websocket_sns_topic_arn
+          Message = {
+            "type": "ML_PIPELINE_STATUS"
+            "data": {
+              "step.$": "$$.State.Name"
+              "status": "FAILED"
+              "executionId.$": "$$.Execution.Id"
+              "timestamp.$": "$$.State.EnteredTime"
+              "error.$": "$.error"
+              "cause.$": "$.cause"
+            }
+          }
+        }
+        Next = "HandleError"
+        Retry = [
+          {
+            ErrorEquals = ["States.ALL"]
+            IntervalSeconds = 2
+            MaxAttempts = 3
+            BackoffRate = 2
           }
         ]
       }
@@ -200,6 +302,15 @@ resource "aws_iam_role_policy" "step_functions_policy" {
         ]
         Resource = [
           "arn:aws:events:*:*:rule/StepFunctionsGetEventsForSageMakerTrainingJobsRule"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:Publish"
+        ]
+        Resource = [
+          var.websocket_sns_topic_arn
         ]
       }
     ]

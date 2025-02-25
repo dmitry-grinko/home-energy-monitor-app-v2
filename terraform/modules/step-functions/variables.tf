@@ -26,4 +26,9 @@ variable "sagemaker_role_arn" {
 variable "bucket_name" {
   description = "Name of the S3 bucket for model storage"
   type        = string
+}
+
+variable "websocket_sns_topic_arn" {
+  description = "ARN of the SNS topic for websocket notifications"
+  type        = string
 } 

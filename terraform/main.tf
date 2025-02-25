@@ -315,6 +315,7 @@ module "step_functions" {
   sagemaker_role_arn      = aws_iam_role.sagemaker_role.arn
   process_data_lambda_arn = module.lambda_process_data.function_arn
   save_model_lambda_arn   = module.lambda_save_model.function_arn
+  websocket_sns_topic_arn = module.sns-websocket-topic.topic_arn
 }
 
 # Add CloudWatch Logs permissions for SageMaker
