@@ -412,7 +412,7 @@ module "lambda_prediction" {
             Action = [
               "ssm:GetParameter"
             ]
-            Resource = aws_ssm_parameter.sagemaker_endpoint.arn
+            Resource = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/sagemaker/endpoint-url"
           }
         ]
       })
@@ -422,7 +422,7 @@ module "lambda_prediction" {
   environment_variables = {
     USER_DATA_TABLE      = module.dynamodb_user_data.table_name
     COGNITO_USER_POOL_ID = module.cognito.user_pool_id
-    SAGEMAKER_ENDPOINT   = aws_ssm_parameter.sagemaker_endpoint.name
+    SAGEMAKER_ENDPOINT   = "/${var.environment}/sagemaker/endpoint-url"
     ENVIRONMENT          = var.environment
   }
 

@@ -107,6 +107,7 @@ const saveEndpointToParameterStore = async (endpointName: string): Promise<void>
   log.info('Saving endpoint to Parameter Store', { endpointName });
 
   try {
+    // Save endpoint name
     await ssmClient.send(new PutParameterCommand({
       Name: `/${ENVIRONMENT}/sagemaker/endpoint-url`,
       Value: endpointName,

@@ -41,7 +41,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             }
           }
         }
-        ResultPath = "$.notificationResult"
+        ResultPath = null
         Next = "TrainModel"
         Retry = [
           {
