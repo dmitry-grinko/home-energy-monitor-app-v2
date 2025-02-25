@@ -1,19 +1,12 @@
-import { APIGatewayProxyEvent, APIGatewayProxyEventV2, APIGatewayProxyResult, APIGatewayProxyResultV2, APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyHandler } from 'aws-lambda';
 import { DynamoDBClient, PutItemCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+// import jwt, { JwtPayload } from 'jsonwebtoken';
 
 const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION });
 
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE!;
-const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID!;
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Id-Token',
-  'Access-Control-Allow-Credentials': 'true'
-};
+// const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID!;
 
 interface ConnectionRecord {
   UserId: string;
@@ -46,75 +39,75 @@ const log = {
   }
 };
 
-const validateTokensAndGetUserId = (headers: Record<string, string | undefined>): string => {
-  log.info('Validating tokens', { headers: Object.keys(headers) });
+// const validateTokensAndGetUserId = (headers: Record<string, string | undefined>): string => {
+//   log.info('Validating tokens', { headers: Object.keys(headers) });
 
-  const idToken = headers['x-id-token'];
-  const accessToken = headers.authorization?.replace('Bearer ', '');
+//   const idToken = headers['x-id-token'];
+//   const accessToken = headers.authorization?.replace('Bearer ', '');
 
-  if (!idToken || !accessToken) {
-    log.error('Missing tokens', { idTokenExists: !!idToken, accessTokenExists: !!accessToken });
-    throw new Error('Missing required tokens');
-  }
+//   if (!idToken || !accessToken) {
+//     log.error('Missing tokens', { idTokenExists: !!idToken, accessTokenExists: !!accessToken });
+//     throw new Error('Missing required tokens');
+//   }
 
-  try {
-    // Decode and validate both tokens
-    const idTokenPayload: JwtPayload = jwt.decode(idToken, { complete: true })?.payload as JwtPayload;
-    const accessTokenPayload: JwtPayload = jwt.decode(accessToken, { complete: true })?.payload as JwtPayload;
+//   try {
+//     // Decode and validate both tokens
+//     const idTokenPayload: JwtPayload = jwt.decode(idToken, { complete: true })?.payload as JwtPayload;
+//     const accessTokenPayload: JwtPayload = jwt.decode(accessToken, { complete: true })?.payload as JwtPayload;
 
-    if (!idTokenPayload || !accessTokenPayload) {
-      log.error('Invalid token payloads', {
-        idTokenPayloadExists: !!idTokenPayload,
-        accessTokenPayloadExists: !!accessTokenPayload
-      });
-      throw new Error('Invalid tokens');
-    }
+//     if (!idTokenPayload || !accessTokenPayload) {
+//       log.error('Invalid token payloads', {
+//         idTokenPayloadExists: !!idTokenPayload,
+//         accessTokenPayloadExists: !!accessTokenPayload
+//       });
+//       throw new Error('Invalid tokens');
+//     }
 
-    // Verify token claims
-    const now = Math.floor(Date.now() / 1000);
-    const tokenValidation = {
-      idTokenSub: !!idTokenPayload.sub,
-      idTokenExp: idTokenPayload.exp,
-      accessTokenExp: accessTokenPayload.exp,
-      currentTime: now,
-      idTokenExpired: idTokenPayload.exp ? idTokenPayload.exp < now : true,
-      accessTokenExpired: accessTokenPayload.exp ? accessTokenPayload.exp < now : true
-    };
+//     // Verify token claims
+//     const now = Math.floor(Date.now() / 1000);
+//     const tokenValidation = {
+//       idTokenSub: !!idTokenPayload.sub,
+//       idTokenExp: idTokenPayload.exp,
+//       accessTokenExp: accessTokenPayload.exp,
+//       currentTime: now,
+//       idTokenExpired: idTokenPayload.exp ? idTokenPayload.exp < now : true,
+//       accessTokenExpired: accessTokenPayload.exp ? accessTokenPayload.exp < now : true
+//     };
 
-    log.info('Token validation details', tokenValidation);
+//     log.info('Token validation details', tokenValidation);
 
-    if (
-      !idTokenPayload.sub ||
-      !idTokenPayload.exp ||
-      !accessTokenPayload.exp ||
-      idTokenPayload.exp < now ||
-      accessTokenPayload.exp < now
-    ) {
-      throw new Error('Tokens expired or invalid');
-    }
+//     if (
+//       !idTokenPayload.sub ||
+//       !idTokenPayload.exp ||
+//       !accessTokenPayload.exp ||
+//       idTokenPayload.exp < now ||
+//       accessTokenPayload.exp < now
+//     ) {
+//       throw new Error('Tokens expired or invalid');
+//     }
 
-    // Verify tokens are from your Cognito user pool
-    const expectedIssuer = `https://cognito-idp.us-east-1.amazonaws.com/${COGNITO_USER_POOL_ID}`;
-    const issuersValid = {
-      expectedIssuer,
-      idTokenIssuer: idTokenPayload.iss,
-      accessTokenIssuer: accessTokenPayload.iss,
-      isValid: idTokenPayload.iss === expectedIssuer && accessTokenPayload.iss === expectedIssuer
-    };
+//     // Verify tokens are from your Cognito user pool
+//     const expectedIssuer = `https://cognito-idp.us-east-1.amazonaws.com/${COGNITO_USER_POOL_ID}`;
+//     const issuersValid = {
+//       expectedIssuer,
+//       idTokenIssuer: idTokenPayload.iss,
+//       accessTokenIssuer: accessTokenPayload.iss,
+//       isValid: idTokenPayload.iss === expectedIssuer && accessTokenPayload.iss === expectedIssuer
+//     };
 
-    log.info('Token issuer validation', issuersValid);
+//     log.info('Token issuer validation', issuersValid);
 
-    if (!issuersValid.isValid) {
-      throw new Error('Invalid token issuer');
-    }
+//     if (!issuersValid.isValid) {
+//       throw new Error('Invalid token issuer');
+//     }
 
-    log.info('Token validation successful', { userId: idTokenPayload.sub });
-    return idTokenPayload.sub;
-  } catch (error) {
-    log.error('Token validation failed', error);
-    throw error;
-  }
-};
+//     log.info('Token validation successful', { userId: idTokenPayload.sub });
+//     return idTokenPayload.sub;
+//   } catch (error) {
+//     log.error('Token validation failed', error);
+//     throw error;
+//   }
+// };
 
 const handleConnect = async (connectionId: string, userId: string): Promise<void> => {
   log.info('Handling connection', { connectionId, userId });
@@ -154,9 +147,12 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   const routeKey = event.requestContext.routeKey;
   
   try {
+    let userId: string | undefined;
+    
     switch (routeKey) {
       case '$connect':
-        const userId = event.requestContext.authorizer?.jwt?.claims?.sub;
+        userId = event.requestContext.authorizer?.jwt?.claims?.sub;
+        console.log('userId', userId);
         if (!userId) {
           return { statusCode: 401, body: 'Unauthorized' };
         }
