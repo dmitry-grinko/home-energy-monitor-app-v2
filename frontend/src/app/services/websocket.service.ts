@@ -27,10 +27,10 @@ export class WebSocketService implements OnDestroy {
   public connectionStatus$ = this.connectionStatusSubject.asObservable();
 
   constructor(private authService: AuthService) {
-    this.connect();
+    // Remove automatic connection from constructor
   }
 
-  private connect(): void {
+  public connect(): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
       console.log('WebSocket is already connected');
       return;

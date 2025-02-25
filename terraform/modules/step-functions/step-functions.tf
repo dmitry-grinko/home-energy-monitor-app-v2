@@ -54,7 +54,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
         Type = "Task"
         Resource = "arn:aws:states:::sagemaker:createTrainingJob.sync"
         Parameters = {
-          TrainingJobName = "States.Format('energy-prediction-{}', $$.Execution.StartTime)"
+          TrainingJobName = States.Format('training-{}', States.TimestampToSeconds(States.Timestamp()))
           AlgorithmSpecification = {
             TrainingImage = "433757028032.dkr.ecr.us-east-1.amazonaws.com/xgboost:1"
             TrainingInputMode = "File"
@@ -66,7 +66,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
               DataSource = {
                 S3DataSource = {
                   S3DataType = "S3Prefix"
-                  S3Uri = "$.s3Path"
+                  S3Uri.$: "$.s3Path"
                   S3DataDistributionType = "FullyReplicated"
                 }
               }
