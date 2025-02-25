@@ -1,0 +1,52 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <div class="container">
+    <!-- Logo and Brand -->
+    <a class="navbar-brand d-flex align-items-center" routerLink="/" (click)="closeMenu()">
+      <i class="bi bi-house-heart-fill text-primary me-2 fs-4"></i>
+      <span class="fw-bold text-primary">Home Energy Monitor v2</span>
+    </a>
+
+    <!-- Mobile Toggle Button -->
+    <button class="navbar-toggler border-0" type="button" 
+            (click)="toggleMenu()" 
+            [attr.aria-expanded]="isMenuOpen"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Navigation Items -->
+    <div class="collapse navbar-collapse" [class.show]="isMenuOpen" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <!-- Show these items when authenticated -->
+        <ng-container *ngIf="isAuthenticated$ | async">
+          <li class="nav-item" *ngFor="let item of authenticatedNavItems">
+            <a *ngIf="item.path" 
+               [routerLink]="item.path" 
+               [class]="item.styleClass" 
+               routerLinkActive="active"
+               (click)="closeMenu()">
+              {{item.label}}
+            </a>
+            <a *ngIf="!item.path" 
+               href="#" 
+               [class]="item.styleClass"
+               (click)="onNavItemClick($event, item)">
+              {{item.label}}
+            </a>
+          </li>
+        </ng-container>
+
+        <!-- Show these items when not authenticated -->
+        <ng-container *ngIf="!(isAuthenticated$ | async)">
+          <li class="nav-item" *ngFor="let item of unauthenticatedNavItems">
+            <a [routerLink]="item.path" 
+               [class]="item.styleClass"
+               (click)="closeMenu()">
+              {{item.label}}
+            </a>
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+</nav>

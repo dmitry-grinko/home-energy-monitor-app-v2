@@ -1,0 +1,26 @@
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    padding: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+
+    .navbar-nav {
+      gap: 0.5rem;
+    }
+
+    .nav-item {
+      width: 100%;
+
+      a, button {
+        width: 100%;
+        text-align: left;
+        padding: 0.5rem 1rem;
+      }
+    }
+  }
+}

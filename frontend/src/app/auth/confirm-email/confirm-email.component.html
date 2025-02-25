@@ -1,0 +1,53 @@
+<div class="d-flex align-items-center py-3">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-sm-12 col-lg-6">
+        <div class="card shadow-sm">
+          <div class="card-body p-4">
+            <h2 class="text-center mb-4">Confirm Your Email</h2>
+            
+            <p *ngIf="email" class="text-center text-muted mb-4">
+              We've sent a confirmation code to <strong>{{ email }}</strong>
+            </p>
+
+            <form [formGroup]="confirmationForm" (ngSubmit)="onSubmit()">
+              <div class="mb-3">
+                <label class="form-label">Confirmation Code</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  formControlName="code"
+                  placeholder="Enter your 6-digit code"
+                  [class.is-invalid]="confirmationForm.get('code')?.invalid && confirmationForm.get('code')?.touched"
+                >
+                <div class="invalid-feedback" *ngIf="confirmationForm.get('code')?.touched && confirmationForm.get('code')?.errors">
+                  <span *ngIf="confirmationForm.get('code')?.errors?.['required']">Confirmation code is required</span>
+                  <span *ngIf="confirmationForm.get('code')?.errors?.['minlength']">Code must be at least 6 characters</span>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                class="btn btn-primary w-100"
+                [disabled]="!confirmationForm.valid || isLoading"
+              >
+                {{ isLoading ? 'Verifying...' : 'Verify Email' }}
+              </button>
+            </form>
+
+            <div class="mt-3 text-center">
+              <p class="mb-2">
+                Didn't receive the code? 
+                <a href="javascript:void(0)" (click)="resendCode()">Resend Code</a>
+              </p>
+              <p>
+                Wrong email? 
+                <a routerLink="/auth/signup">Go back to signup</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

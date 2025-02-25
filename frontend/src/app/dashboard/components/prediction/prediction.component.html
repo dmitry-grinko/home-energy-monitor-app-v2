@@ -1,0 +1,55 @@
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12 col-lg-6">
+      <div class="alert alert-info mb-3">
+        Please upload at least 100 energy consumption records to train the prediction model.
+      </div>
+
+      <div class="d-flex gap-2 mb-3">
+        <button 
+          class="btn btn-secondary" 
+          (click)="trainModel()"
+          [disabled]="trainingModel">
+          {{ trainingModel ? 'Training Model...' : 'Train Model' }}
+        </button>
+      </div>
+
+      <div class="mb-3">
+        <label for="predictionDate" class="form-label">Select Date for Prediction</label>
+        <input 
+          type="date" 
+          class="form-control" 
+          id="predictionDate"
+          [(ngModel)]="selectedDate"
+          [min]="today">
+      </div>
+      <button 
+        class="btn btn-primary" 
+        (click)="getPrediction()"
+        [disabled]="!selectedDate || loading">
+        {{ loading ? 'Getting Prediction...' : 'Get Prediction' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="row mt-4" *ngIf="prediction">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Predicted Energy Consumption</h5>
+          <p class="card-text">
+            For date: {{ prediction.date | date:'mediumDate' }}
+          </p>
+          <h3 class="text-primary">{{ prediction.prediction }} kWh</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12 col-lg-6">
+      <div class="alert alert-danger mt-3" *ngIf="error">
+        {{ error }}
+      </div>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,107 @@
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <h2>Dashboard</h2>
+        <br>
+        
+        <!-- Desktop Nav tabs - hidden below 1400px -->
+        <div class="d-none d-xxl-block">
+          <ul ngbNav #nav="ngbNav" class="nav-tabs">
+            <li ngbNavItem="manual-input">
+              <a ngbNavLink>Manual Data Input</a>
+              <ng-template ngbNavContent>
+                <app-manual-data-input></app-manual-data-input>
+              </ng-template>
+            </li>
+            <li ngbNavItem="statistics">
+              <a ngbNavLink>File Upload for Bulk Data</a>
+              <ng-template ngbNavContent>
+                <app-file-upload></app-file-upload>
+              </ng-template>
+            </li>
+            <li ngbNavItem="historical-data">
+              <a ngbNavLink>Retrieve Historical Data</a>
+              <ng-template ngbNavContent>
+                <app-historical-data></app-historical-data>
+              </ng-template>
+            </li>
+            <li ngbNavItem="data-visualization">
+              <a ngbNavLink>Data Visualization</a>
+              <ng-template ngbNavContent>
+                <app-data-visualization></app-data-visualization>
+              </ng-template>
+            </li>
+            <li ngbNavItem="alerts-notifications">
+              <a ngbNavLink>Alerts & Notifications</a>
+              <ng-template ngbNavContent>
+                <app-alerts-notifications></app-alerts-notifications>
+              </ng-template>
+            </li>
+            <li ngbNavItem="prediction">
+              <a ngbNavLink>Prediction</a>
+              <ng-template ngbNavContent>
+                <app-prediction></app-prediction>
+              </ng-template>
+            </li>
+          </ul>
+          
+          <div [ngbNavOutlet]="nav" class="mt-3"></div>
+        </div>
+
+        <!-- Mobile/Tablet/Small Desktop buttons - visible below 1400px -->
+        <div class="d-xxl-none">
+          <div class="d-grid gap-2">
+            <button class="btn mb-2" 
+                    [class.btn-primary]="selectedContent === 'manual-input'"
+                    [class.btn-outline-primary]="selectedContent !== 'manual-input'"
+                    (click)="selectedContent = 'manual-input'">
+              Manual Data Input
+            </button>
+            <button class="btn mb-2"
+                    [class.btn-primary]="selectedContent === 'statistics'"
+                    [class.btn-outline-primary]="selectedContent !== 'statistics'"
+                    (click)="selectedContent = 'statistics'">
+              File Upload for Bulk Data
+            </button>
+            <button class="btn mb-2"
+                    [class.btn-primary]="selectedContent === 'historical-data'"
+                    [class.btn-outline-primary]="selectedContent !== 'historical-data'"
+                    (click)="selectedContent = 'historical-data'">
+              Retrieve Historical Data
+            </button>
+            <button class="btn mb-2"
+                    [class.btn-primary]="selectedContent === 'data-visualization'"
+                    [class.btn-outline-primary]="selectedContent !== 'data-visualization'"
+                    (click)="selectedContent = 'data-visualization'">
+              Data Visualization
+            </button>
+            <button class="btn mb-2"
+                    [class.btn-primary]="selectedContent === 'alerts-notifications'"
+                    [class.btn-outline-primary]="selectedContent !== 'alerts-notifications'"
+                    (click)="selectedContent = 'alerts-notifications'">
+              Alerts & Notifications
+            </button>
+            <button class="btn mb-2"
+                    [class.btn-primary]="selectedContent === 'prediction'"
+                    [class.btn-outline-primary]="selectedContent !== 'prediction'"
+                    (click)="selectedContent = 'prediction'">
+              Prediction
+            </button>
+          </div>
+
+          <!-- Mobile content -->
+          <div class="mt-3">
+            <app-manual-data-input *ngIf="selectedContent === 'manual-input'"></app-manual-data-input>
+            <app-file-upload *ngIf="selectedContent === 'statistics'"></app-file-upload>
+            <app-historical-data *ngIf="selectedContent === 'historical-data'"></app-historical-data>
+            <app-data-visualization *ngIf="selectedContent === 'data-visualization'"></app-data-visualization>
+            <app-alerts-notifications *ngIf="selectedContent === 'alerts-notifications'"></app-alerts-notifications>
+            <app-prediction *ngIf="selectedContent === 'prediction'"></app-prediction>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>

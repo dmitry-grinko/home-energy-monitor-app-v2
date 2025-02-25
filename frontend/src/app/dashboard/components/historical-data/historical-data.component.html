@@ -1,0 +1,74 @@
+<div class="historical-data">
+  <div class="row mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="form-group">
+        <label for="startDate">Start Date:</label>
+        <input 
+          type="date" 
+          id="startDate" 
+          [(ngModel)]="startDate" 
+          class="form-control">
+      </div>
+    </div>
+    
+    <div class="col-sm-6 col-lg-3">
+      <div class="form-group">
+        <label for="endDate">End Date:</label>
+        <input 
+          type="date" 
+          id="endDate" 
+          [(ngModel)]="endDate" 
+          class="form-control">
+      </div>
+    </div>
+
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <button 
+        (click)="onRetrieveData()" 
+        [disabled]="isLoading || !startDate || !endDate"
+        class="btn btn-primary history-btn me-2 mt-4">
+        {{ isLoading ? 'Loading...' : 'Retrieve Data' }}
+      </button>
+
+      <button 
+        (click)="onDownloadData()" 
+        class="btn btn-secondary mt-4"
+        [disabled]="isLoading">
+        Download All Data (CSV)
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="energyData.length > 0" class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Usage (kWh)</th>
+          <th>Source</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let data of energyData">
+          <td>{{ data.Date | date:'shortDate' }}</td>
+          <td>{{ data.EnergyUsage }}</td>
+          <td>{{ data.Source }}</td>
+          <td>{{ data.CreatedAt | date:'short' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="!isLoading && energyData.length === 0" class="no-data">
+    No data available for the selected period
+  </div>
+</div> 

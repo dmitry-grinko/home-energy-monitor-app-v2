@@ -1,0 +1,60 @@
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12 col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Set Energy Usage Alert Threshold</h5>
+          
+          <!-- Add current threshold display -->
+          <div *ngIf="currentThreshold !== null" class="alert alert-info mb-3">
+            Your current threshold is set to {{ currentThreshold }} kWh
+          </div>
+
+          <div class="mb-3">
+            <label for="thresholdInput" class="form-label">Energy Usage Threshold (kWh)</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              id="thresholdInput" 
+              [(ngModel)]="threshold" 
+              placeholder="Enter threshold value">
+            <small class="text-muted mt-2 d-block">
+              We will notify you by email when your daily usage exceeds the specified threshold. Alerts will trigger via SNS after users upload new data.
+            </small>
+            <div class="alert alert-warning mt-3">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              <strong>Important Note:</strong>
+              <ul class="mb-0 mt-2">
+                <li>Email notifications will only be sent to email addresses verified during signup</li>
+                <li>We are using Amazon SES Sandbox environment which has the following limitations:</li>
+                <ul>
+                  <li>Maximum sending quota: 200 emails per 24 hours</li>
+                  <li>Maximum sending rate: 1 email per second</li>
+                </ul>
+              </ul>
+            </div>
+          </div>
+          <button class="btn btn-primary" (click)="setThreshold()">Set Threshold</button>
+
+          <div *ngIf="thresholdError" class="alert alert-danger d-flex align-items-center mt-3">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span>{{ thresholdError }}</span>
+          </div>
+
+          <div *ngIf="thresholdSuccess" class="alert alert-success d-flex align-items-center mt-3">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span>Threshold set successfully!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ngb-alert 
+    *ngIf="showAlert" 
+    [type]="alertType" 
+    (closed)="showAlert = false" 
+    class="mt-3">
+    {{ alertMessage }}
+  </ngb-alert>
+</div> 

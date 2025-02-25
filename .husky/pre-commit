@@ -1,0 +1,62 @@
+echo "HUSKY **************************************************"
+
+echo "Auth Lambda ------------------------------------------------------------"
+cd ./backend/lambdas/auth
+npm run lint
+npm run build
+
+echo "User Data Lambda ------------------------------------------------------------"
+cd ../user-data
+npm run lint
+npm run build
+
+echo "Email Lambda ------------------------------------------------------------"
+cd ../email
+npm run lint
+npm run build
+
+echo "Energy Lambda ------------------------------------------------------------"
+cd ../energy
+npm run lint
+npm run build
+
+echo "Prediction Lambda ------------------------------------------------------------"
+cd ../prediction
+npm run lint
+npm run build
+
+echo "Presigned URL Lambda ------------------------------------------------------------"
+cd ../presigned-url
+npm run lint
+npm run build
+
+echo "Trigger Lambda ------------------------------------------------------------"
+cd ../trigger
+npm run lint
+npm run build
+
+echo "Connection Lambda ------------------------------------------------------------"
+cd ../connection
+npm run lint
+npm run build
+
+echo "Process Data Lambda ------------------------------------------------------------"
+cd ../process-data
+npm run lint
+npm run build
+
+echo "Save Model Lambda ------------------------------------------------------------"
+cd ../save-model
+npm run lint
+npm run build
+
+echo "Websocket Lambda ------------------------------------------------------------"
+cd ../websocket
+npm run lint
+npm run build
+
+echo "Terraform ------------------------------------------------------------"
+cd ../../../terraform
+terraform fmt -check
+
+echo "*************************************************************************************"

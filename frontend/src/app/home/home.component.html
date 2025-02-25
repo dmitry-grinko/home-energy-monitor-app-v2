@@ -1,0 +1,78 @@
+<div class="container">
+  <!-- Header Section -->
+  <div class="row justify-content-center">
+    <div class="col-lg-12">
+      <header class="text-center mb-5">
+        <h1 class="display-3 fw-bold text-primary">Home Energy Monitor</h1>
+        <p class="lead fs-3">Track, Analyze, and Optimize Your Energy Usage</p>
+        <button 
+          class="btn btn-primary btn-lg mt-3 px-5 py-3 rounded-pill shadow-sm"
+          (click)="navigateToApp()">
+          Get Started
+        </button>
+      </header>
+    </div>
+  </div>
+
+  <!-- Introduction -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-12">
+      <div class="card shadow-sm border-0 p-4">
+        <div class="text-center mb-3">
+        </div>
+        <p class="lead mb-0">
+          The Home Energy Monitor app helps users track their energy consumption, manually input data, 
+          upload CSV files, and receive alerts when their energy usage exceeds predefined thresholds. 
+          The goal is to provide users with insights into their energy consumption and encourage smarter energy usage.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-12">
+      <h2 class="text-center mb-4">
+      </h2>
+      <div class="row g-4">
+        <div class="col-md-4" *ngFor="let feature of features">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center">
+              <h3 class="h5 card-title">{{ feature.title }}</h3>
+              <p class="card-text">{{ feature.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Technology Stack -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-12">
+      <h2 class="text-center mb-4">
+      </h2>
+      <div class="row g-4">
+        <div class="col-12" *ngFor="let section of technologySections">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex align-items-center mb-4">
+                <h3 class="h4 mb-0">{{ section.title }}</h3>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6" *ngFor="let item of section.items">
+                  <div class="d-flex align-items-center p-3 border rounded bg-light">
+                    <div>
+                      <h4 class="h6 mb-1">{{ item.title }}</h4>
+                      <p class="mb-0 small text-muted">{{ item.description }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

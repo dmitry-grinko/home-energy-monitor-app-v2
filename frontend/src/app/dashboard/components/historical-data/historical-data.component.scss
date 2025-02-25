@@ -1,0 +1,85 @@
+.container {
+  padding: 20px 0;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  margin-bottom: 0.5rem;
+}
+
+.historical-data {
+  padding: 20px;
+
+  .form-group {
+    margin-bottom: 1rem;
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+  }
+
+  .alert {
+    margin: 20px 0;
+  }
+
+  .table-responsive {
+    margin-top: 20px;
+  }
+
+  .filters {
+    margin-bottom: 20px;
+    
+    input {
+      margin-right: 10px;
+      padding: 8px;
+    }
+
+    button {
+      padding: 8px 16px;
+    }
+  }
+
+  .error {
+    color: red;
+    margin: 10px 0;
+  }
+
+  .table-container {
+    margin-top: 20px;
+    overflow-x: auto;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      
+      th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+      }
+
+      tr:hover {
+        background-color: #f9f9f9;
+      }
+    }
+  }
+
+  .no-data {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+  }
+} 
+
+.history-btn {
+  margin-top: 0;
+}

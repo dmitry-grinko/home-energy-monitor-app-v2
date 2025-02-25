@@ -1,0 +1,560 @@
+name: Pipeline
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+      - 'terraform/**'
+      - 'backend/**'
+  workflow_dispatch:
+
+env:
+  TF_VAR_aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  TF_VAR_aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  TF_VAR_aws-region: ${{ secrets.AWS_REGION }}
+  TF_VAR_root-domain: ${{ secrets.ROOT_DOMAIN }}
+  TF_VAR_subdomain-name: ${{ secrets.PROJECT_NAME }}
+  TF_VAR_bucket-name: ${{ secrets.FRONTEND_S3_BUCKET_NAME }}
+  TF_VAR_project-name: ${{ secrets.PROJECT_NAME }}
+  TF_VAR_environment: 'dev'
+  TF_VAR_from-email: ${{ secrets.FROM_EMAIL }}
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    name: Build Lambda Functions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/lambdas/auth/package-lock.json
+
+      # Auth Lambda
+      - name: Install auth lambda dependencies
+        working-directory: backend/lambdas/auth
+        run: npm ci
+
+      - name: Lint auth lambda code
+        working-directory: backend/lambdas/auth
+        run: npm run lint
+
+      - name: Run auth lambda tests
+        working-directory: backend/lambdas/auth
+        run: npm test
+
+      - name: Build and package auth lambda
+        working-directory: backend/lambdas/auth
+        run: |
+          npm run package
+          if [ ! -f lambda-auth.zip ]; then
+            echo "Error: lambda-auth.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload auth lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-auth
+          path: backend/lambdas/auth/lambda-auth.zip
+          retention-days: 5
+
+      # Energy Lambda
+      - name: Install energy lambda dependencies
+        working-directory: backend/lambdas/energy
+        run: npm ci
+
+      - name: Lint energy lambda code
+        working-directory: backend/lambdas/energy
+        run: npm run lint
+
+      - name: Run energy lambda tests
+        working-directory: backend/lambdas/energy
+        run: npm test
+
+      - name: Build and package energy lambda
+        working-directory: backend/lambdas/energy
+        run: |
+          npm run package
+          if [ ! -f lambda-energy.zip ]; then
+            echo "Error: lambda-energy.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload energy lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-energy
+          path: backend/lambdas/energy/lambda-energy.zip
+          retention-days: 5
+
+      # Presigned-url Lambda
+      - name: Install presigned-url lambda dependencies
+        working-directory: backend/lambdas/presigned-url
+        run: npm ci
+
+      - name: Lint presigned-url lambda code
+        working-directory: backend/lambdas/presigned-url
+        run: npm run lint
+
+      - name: Run presigned-url lambdatests
+        working-directory: backend/lambdas/presigned-url
+        run: npm test
+
+      - name: Build and package presigned-url lambda
+        working-directory: backend/lambdas/presigned-url
+        run: |
+          npm run package
+          if [ ! -f lambda-presigned-url.zip ]; then
+            echo "Error: lambda-presigned-url.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload presigned-url lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-presigned-url
+          path: backend/lambdas/presigned-url/lambda-presigned-url.zip
+          retention-days: 5
+
+      # Trigger Lambda
+      - name: Install trigger lambda dependencies
+        working-directory: backend/lambdas/trigger
+        run: npm ci
+
+      - name: Lint trigger lambda code
+        working-directory: backend/lambdas/trigger
+        run: npm run lint
+
+      - name: Run trigger lambda tests
+        working-directory: backend/lambdas/trigger
+        run: npm test
+
+      - name: Build and package trigger lambda
+        working-directory: backend/lambdas/trigger
+        run: |
+          npm run package
+          if [ ! -f lambda-trigger.zip ]; then
+            echo "Error: lambda-trigger.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload trigger lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-trigger
+          path: backend/lambdas/trigger/lambda-trigger.zip
+          retention-days: 5
+
+
+      # Email Lambda
+      - name: Install email lambda dependencies
+        working-directory: backend/lambdas/email
+        run: npm ci
+
+      - name: Lint email lambda code
+        working-directory: backend/lambdas/email
+        run: npm run lint
+
+      - name: Run email lambda tests
+        working-directory: backend/lambdas/email
+        run: npm test
+
+      - name: Build and package email lambda
+        working-directory: backend/lambdas/email
+        run: |
+          npm run package
+          if [ ! -f lambda-email.zip ]; then
+            echo "Error: lambda-email.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload email lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-email
+          path: backend/lambdas/email/lambda-email.zip
+          retention-days: 5
+
+      # User Data Lambda
+      - name: Install user data lambda dependencies
+        working-directory: backend/lambdas/user-data
+        run: npm ci
+
+      - name: Lint user data lambda code
+        working-directory: backend/lambdas/user-data
+        run: npm run lint
+
+      - name: Run user data lambda tests
+        working-directory: backend/lambdas/user-data
+        run: npm test
+
+      - name: Build and package user data lambda
+        working-directory: backend/lambdas/user-data
+        run: |
+          npm run package
+          if [ ! -f lambda-user-data.zip ]; then
+            echo "Error: lambda-user-data.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload user data lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-user-data
+          path: backend/lambdas/user-data/lambda-user-data.zip
+          retention-days: 5
+
+      # Prediction Lambda
+      - name: Install prediction lambda dependencies
+        working-directory: backend/lambdas/prediction
+        run: npm ci
+
+      - name: Lint prediction lambda code
+        working-directory: backend/lambdas/prediction
+        run: npm run lint
+
+      - name: Run prediction lambda tests
+        working-directory: backend/lambdas/prediction
+        run: npm test
+
+      - name: Build and package prediction
+        working-directory: backend/lambdas/prediction
+        run: |
+          npm run package
+          if [ ! -f lambda-prediction.zip ]; then
+            echo "Error: lambda-prediction.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload prediction lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-prediction
+          path: backend/lambdas/prediction/lambda-prediction.zip
+          retention-days: 5
+
+      # Connection Lambda
+      - name: Install connection lambda dependencies
+        working-directory: backend/lambdas/connection
+        run: npm ci
+
+      - name: Lint connection lambda code
+        working-directory: backend/lambdas/connection
+        run: npm run lint
+
+      - name: Run connection lambda tests
+        working-directory: backend/lambdas/connection
+        run: npm test
+
+      - name: Build and package connection
+        working-directory: backend/lambdas/connection
+        run: |
+          npm run package
+          if [ ! -f lambda-connection.zip ]; then
+            echo "Error: lambda-connection.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload connection lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-connection
+          path: backend/lambdas/connection/lambda-connection.zip
+          retention-days: 5
+
+      # Websocket Lambda
+      - name: Install websocket lambda dependencies
+        working-directory: backend/lambdas/websocket
+        run: npm ci
+
+      - name: Lint websocket lambda code
+        working-directory: backend/lambdas/websocket
+        run: npm run lint
+
+      - name: Run websocket lambda tests
+        working-directory: backend/lambdas/websocket
+        run: npm test
+
+      - name: Build and package websocket
+        working-directory: backend/lambdas/websocket
+        run: |
+          npm run package
+          if [ ! -f lambda-websocket.zip ]; then
+            echo "Error: lambda-websocket.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload websocket lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-websocket
+          path: backend/lambdas/websocket/lambda-websocket.zip
+          retention-days: 5
+
+      # Process Data Lambda
+      - name: Install process-data lambda dependencies
+        working-directory: backend/lambdas/process-data
+        run: npm ci
+
+      - name: Lint process-data lambda code
+        working-directory: backend/lambdas/process-data
+        run: npm run lint
+
+      - name: Run process-data lambda tests
+        working-directory: backend/lambdas/process-data
+        run: npm test
+
+      - name: Build and package process-data
+        working-directory: backend/lambdas/process-data
+        run: |
+          npm run package
+          if [ ! -f lambda-process-data.zip ]; then
+            echo "Error: lambda-process-data.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload process-data lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-process-data
+          path: backend/lambdas/process-data/lambda-process-data.zip
+          retention-days: 5
+
+      # Save model Lambda
+      - name: Install save-model lambda dependencies
+        working-directory: backend/lambdas/save-model
+        run: npm ci
+
+      - name: Lint save-model lambda code
+        working-directory: backend/lambdas/save-model
+        run: npm run lint
+
+      - name: Run save-model lambda tests
+        working-directory: backend/lambdas/save-model
+        run: npm test
+
+      - name: Build and package save-model
+        working-directory: backend/lambdas/save-model
+        run: |
+          npm run package
+          if [ ! -f lambda-save-model.zip ]; then
+            echo "Error: lambda-save-model.zip was not created"
+            exit 1
+          fi
+
+      - name: Upload save-model lambda artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-save-model
+          path: backend/lambdas/save-model/lambda-save-model.zip
+          retention-days: 5
+
+  infrastructure:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Auth Lambda
+      - name: Download Auth Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-auth
+          path: backend/lambdas/auth
+
+      # Energy Lambda
+      - name: Download Energy Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-energy
+          path: backend/lambdas/energy
+
+      # Presigned-url Lambda
+      - name: Download Presigned-url Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-presigned-url
+          path: backend/lambdas/presigned-url
+
+      # Trigger Lambda
+      - name: Download Trigger Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-trigger
+          path: backend/lambdas/trigger
+
+      # Email Lambda
+      - name: Download Email Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-email
+          path: backend/lambdas/email
+
+      # User Data Lambda
+      - name: Download User Data Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-user-data
+          path: backend/lambdas/user-data
+
+      # Prediction Lambda
+      - name: Download Prediction Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-prediction
+          path: backend/lambdas/prediction
+
+      # Connection Lambda
+      - name: Download Connection Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-connection
+          path: backend/lambdas/connection
+
+      # Websocket Lambda
+      - name: Download Websocket Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-websocket
+          path: backend/lambdas/websocket
+
+      # Process Data Lambda
+      - name: Download Process Data Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-process-data
+          path: backend/lambdas/process-data
+
+      # Save Model Lambda
+      - name: Download Save Model Lambda artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-save-model
+          path: backend/lambdas/save-model       
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.0"
+
+      - name: Terraform Format
+        working-directory: terraform
+        run: terraform fmt -check
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: terraform
+        run: |
+          rm -f plan.tfplan
+          terraform plan -out=plan.tfplan
+
+      - name: Terraform Show
+        working-directory: terraform
+        run: terraform show plan.tfplan
+
+      - name: Terraform Apply
+        working-directory: terraform
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve plan.tfplan
+
+  deploy-content:
+    name: Deploy Website Content
+    needs: infrastructure
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Angular application
+        working-directory: frontend
+        env:
+          API_URL: ${{ secrets.API_URL }}
+        run: npm run build
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync frontend/dist/frontend/browser s3://${{ env.TF_VAR_bucket-name }}/ \
+            --delete \
+            --cache-control "max-age=3600"
+
+  # destroy:
+  #   runs-on: ubuntu-latest
+    
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.AWS_REGION }}
+
+  #     - name: Install jq
+  #       run: sudo apt-get install -y jq
+
+  #     - name: Clean up S3 bucket
+  #       run: |
+  #         chmod +x scripts/cleanup.sh
+  #         source scripts/cleanup.sh
+  #         delete_s3_bucket "${{ env.TF_VAR_bucket-name }}"
+
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #       with:
+  #         terraform_version: "1.5.0"
+
+  #     - name: Terraform Init
+  #       run: terraform -chdir=terraform init
+
+  #     - name: Terraform Destroy
+  #       run: terraform -chdir=terraform destroy -auto-approve 

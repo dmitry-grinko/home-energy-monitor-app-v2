@@ -1,0 +1,30 @@
+<div class="row">
+  <div class="col-md-4 col-sm-12">
+    <div class="form-group">
+      <label for="periodSelect">Select Period</label>
+      <select 
+        id="periodSelect"
+        class="form-select" 
+        [(ngModel)]="selectedPeriod"
+        (ngModelChange)="onPeriodChange()">
+        <option *ngFor="let period of periods" [value]="period.id">
+          {{period.name}}
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="chart-container" style="position: relative; height:60vh;">
+      <div *ngIf="isLoading" class="text-center d-flex align-items-center justify-content-center" style="height: 100%">
+        <div>
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          Loading...
+        </div>
+      </div>
+      <div [chart]="chart" *ngIf="!isLoading"></div>
+    </div>
+  </div>
+</div> 
