@@ -340,4 +340,12 @@ resource "aws_iam_role_policy" "sagemaker_cloudwatch_policy" {
   })
 }
 
+module "sagemaker" {
+  source = "./modules/sagemaker"
+
+  name       = var.project-name
+  tags       = local.tags
+  bucket_arn = module.s3_csv_storage.bucket_arn
+}
+
 

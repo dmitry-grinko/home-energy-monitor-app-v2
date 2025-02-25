@@ -616,7 +616,7 @@ module "lambda_save_model" {
   ]
 
   environment_variables = {
-    ENVIRONMENT = var.environment
+    ENVIRONMENT        = var.environment
     SAGEMAKER_ROLE_ARN = module.sagemaker.role_arn
   }
 
