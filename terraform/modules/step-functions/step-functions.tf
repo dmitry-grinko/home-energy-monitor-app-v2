@@ -41,6 +41,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             }
           }
         }
+        ResultPath = "$.notificationResult"
         Next = "TrainModel"
         Retry = [
           {
@@ -138,6 +139,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             }
           }
         }
+        ResultPath = "$.notificationResult"
         Next = "SaveModel"
         Retry = [
           {
@@ -182,6 +184,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             }
           }
         }
+        ResultPath = "$.notificationResult"
         End = true
         Retry = [
           {
@@ -209,6 +212,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             }
           }
         }
+        ResultPath = "$.notificationResult"
         Next = "HandleError"
         Retry = [
           {
