@@ -4,7 +4,7 @@ data "aws_region" "current" {}
 # WebSocket API Gateway
 resource "aws_apigatewayv2_api" "websocket" {
   name                       = "${var.project-name}-websocket-v2"
-  protocol_type             = "WEBSOCKET"
+  protocol_type              = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
 
   tags = local.tags
@@ -16,21 +16,21 @@ resource "aws_apigatewayv2_stage" "websocket" {
   name   = var.environment
 
   default_route_settings {
-    throttling_burst_limit = 100
-    throttling_rate_limit  = 50
+    throttling_burst_limit   = 100
+    throttling_rate_limit    = 50
     detailed_metrics_enabled = true
   }
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.websocket_access_logs.arn
     format = jsonencode({
-      requestId      = "$context.requestId"
-      ip            = "$context.identity.sourceIp"
-      requestTime   = "$context.requestTime"
-      httpMethod    = "$context.httpMethod"
-      routeKey      = "$context.routeKey"
-      status        = "$context.status"
-      connectionId  = "$context.connectionId"
+      requestId    = "$context.requestId"
+      ip           = "$context.identity.sourceIp"
+      requestTime  = "$context.requestTime"
+      httpMethod   = "$context.httpMethod"
+      routeKey     = "$context.routeKey"
+      status       = "$context.status"
+      connectionId = "$context.connectionId"
       error        = "$context.error.message"
     })
   }
@@ -42,14 +42,14 @@ resource "aws_apigatewayv2_stage" "websocket" {
 resource "aws_cloudwatch_log_group" "websocket_access_logs" {
   name              = "/aws/apigateway/${var.project-name}-websocket-v2"
   retention_in_days = 14
-  tags             = local.tags
+  tags              = local.tags
 }
 
 # WebSocket routes
 resource "aws_apigatewayv2_route" "websocket_connect" {
-  api_id    = aws_apigatewayv2_api.websocket.id
-  route_key = "$connect"
-  target    = "integrations/${aws_apigatewayv2_integration.websocket_connect.id}"
+  api_id             = aws_apigatewayv2_api.websocket.id
+  route_key          = "$connect"
+  target             = "integrations/${aws_apigatewayv2_integration.websocket_connect.id}"
   authorization_type = "AWS_IAM"
 }
 
@@ -74,8 +74,8 @@ resource "aws_apigatewayv2_integration" "websocket_connect" {
   connection_type           = "INTERNET"
   content_handling_strategy = "CONVERT_TO_TEXT"
   integration_method        = "POST"
-  integration_uri          = module.lambda_connection.function_arn
-  passthrough_behavior     = "WHEN_NO_MATCH"
+  integration_uri           = module.lambda_connection.function_arn
+  passthrough_behavior      = "WHEN_NO_MATCH"
 
   credentials_arn = aws_iam_role.apigateway_websocket.arn
 }
@@ -87,8 +87,8 @@ resource "aws_apigatewayv2_integration" "websocket_disconnect" {
   connection_type           = "INTERNET"
   content_handling_strategy = "CONVERT_TO_TEXT"
   integration_method        = "POST"
-  integration_uri          = module.lambda_connection.function_arn
-  passthrough_behavior     = "WHEN_NO_MATCH"
+  integration_uri           = module.lambda_connection.function_arn
+  passthrough_behavior      = "WHEN_NO_MATCH"
 
   credentials_arn = aws_iam_role.apigateway_websocket.arn
 }
@@ -101,8 +101,8 @@ resource "aws_apigatewayv2_integration" "websocket_default" {
   connection_type           = "INTERNET"
   content_handling_strategy = "CONVERT_TO_TEXT"
   integration_method        = "POST"
-  integration_uri          = module.lambda_websocket.function_arn
-  passthrough_behavior     = "WHEN_NO_MATCH"
+  integration_uri           = module.lambda_websocket.function_arn
+  passthrough_behavior      = "WHEN_NO_MATCH"
 
   credentials_arn = aws_iam_role.apigateway_websocket.arn
 }
