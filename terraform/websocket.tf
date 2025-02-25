@@ -47,11 +47,9 @@ resource "aws_cloudwatch_log_group" "websocket_access_logs" {
 
 # WebSocket routes
 resource "aws_apigatewayv2_route" "websocket_connect" {
-  api_id             = aws_apigatewayv2_api.websocket.id
-  route_key          = "$connect"
-  target             = "integrations/${aws_apigatewayv2_integration.websocket_connect.id}"
-  authorizer_id      = aws_apigatewayv2_authorizer.websocket.id
-  authorization_type = "JWT"
+  api_id    = aws_apigatewayv2_api.websocket.id
+  route_key = "$connect"
+  target    = "integrations/${aws_apigatewayv2_integration.websocket_connect.id}"
 }
 
 resource "aws_apigatewayv2_route" "websocket_disconnect" {
@@ -157,19 +155,6 @@ resource "aws_lambda_permission" "apigateway_websocket" {
   function_name = module.lambda_connection.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.websocket.execution_arn}/*"
-}
-
-# Add Cognito authorizer
-resource "aws_apigatewayv2_authorizer" "websocket" {
-  api_id           = aws_apigatewayv2_api.websocket.id
-  authorizer_type  = "JWT"
-  identity_sources = ["$request.querystring.auth"]
-  name             = "cognito-authorizer"
-
-  jwt_configuration {
-    audience = [module.cognito.client_id]
-    issuer   = "https://cognito-idp.${data.aws_region.current.name}.amazonaws.com/${module.cognito.user_pool_id}"
-  }
 }
 
 # Outputs

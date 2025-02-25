@@ -139,24 +139,18 @@ const handleDisconnect = async (connectionId: string): Promise<void> => {
 };
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  if (!event.requestContext.connectionId) {
-    return { statusCode: 400, body: 'Missing connection ID' };
-  }
-
   const connectionId = event.requestContext.connectionId;
   const routeKey = event.requestContext.routeKey;
   
+  if (!connectionId) {
+    return { statusCode: 400, body: 'Missing connection ID' };
+  }
+
+  const userId = "1"; // TODO: get user ID
+
   try {
-    let userId: string | undefined;
-    
     switch (routeKey) {
       case '$connect':
-        userId = event.requestContext.authorizer?.jwt?.claims?.sub;
-        console.log('userId', userId);
-        if (!userId) {
-          return { statusCode: 401, body: 'Unauthorized' };
-        }
-
         await handleConnect(connectionId, userId);
         return { statusCode: 200, body: 'Connected' };
 
