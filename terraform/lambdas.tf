@@ -223,9 +223,9 @@ module "lambda_trigger" {
   ]
 
   environment_variables = {
-    TABLE_NAME    = module.dynamodb_energy_usage.table_name
-    BUCKET_NAME   = module.s3_csv_storage.bucket_id
-    SNS_TOPIC_ARN = module.sns-email-topic.topic_arn
+    TABLE_NAME              = module.dynamodb_energy_usage.table_name
+    BUCKET_NAME             = module.s3_csv_storage.bucket_id
+    SNS_TOPIC_ARN           = module.sns-email-topic.topic_arn
     SNS_WEBSOCKET_TOPIC_ARN = module.sns-websocket-topic.topic_arn // TODO: lambda trigger should notify users
   }
 
