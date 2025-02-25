@@ -66,7 +66,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
               DataSource = {
                 S3DataSource = {
                   S3DataType = "S3Prefix"
-                  S3Uri = "$$.Execution.Input.s3Path"
+                  S3Uri = "States.JsonToString($.s3Path)"
                   S3DataDistributionType = "FullyReplicated"
                 }
               }

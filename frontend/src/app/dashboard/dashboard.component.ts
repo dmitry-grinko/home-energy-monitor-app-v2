@@ -39,20 +39,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.webSocketService.connect();  // Explicitly connect when component initializes
-    this.wsSubscription = this.webSocketService.messages$.subscribe(
-      (message: WebSocketMessage) => {
-        console.log('Received WebSocket message:', message);
-        
-        // Show toast notification for the message
-        const modalRef = this.modalService.open(ToastComponent);
-        modalRef.componentInstance.title = message.type;
-        modalRef.componentInstance.message = message.data;
-      }
-    );
+    console.log('[DashboardComponent] Initializing...');
+    
+    // Connect to WebSocket when component initializes
+    console.log('[DashboardComponent] Attempting to connect to WebSocket');
+    this.webSocketService.connect();
+    
+    // Subscribe to messages
+    this.wsSubscription = this.webSocketService.messages$.subscribe(message => {
+      console.log('[DashboardComponent] Received WebSocket message:', {
+        type: message.type,
+        timestamp: message.timestamp,
+        data: message.data
+      });
+      
+      // Show toast notification for the message
+      console.log('[DashboardComponent] Opening toast notification');
+      const modalRef = this.modalService.open(ToastComponent);
+      modalRef.componentInstance.title = message.type;
+      modalRef.componentInstance.message = message.data;
+    });
+
+    // Monitor connection status
+    this.webSocketService.connectionStatus$.subscribe(isConnected => {
+      console.log('[DashboardComponent] WebSocket connection status changed:', isConnected);
+    });
   }
 
   ngOnDestroy() {
+    console.log('[DashboardComponent] Component destroying, cleaning up subscriptions');
     this.wsSubscription?.unsubscribe();
   }
 }
