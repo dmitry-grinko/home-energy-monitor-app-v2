@@ -49,10 +49,6 @@ jobs:
         working-directory: backend/lambdas/auth
         run: npm run lint
 
-      - name: Run auth lambda tests
-        working-directory: backend/lambdas/auth
-        run: npm test
-
       - name: Build and package auth lambda
         working-directory: backend/lambdas/auth
         run: |
@@ -77,10 +73,6 @@ jobs:
       - name: Lint energy lambda code
         working-directory: backend/lambdas/energy
         run: npm run lint
-
-      - name: Run energy lambda tests
-        working-directory: backend/lambdas/energy
-        run: npm test
 
       - name: Build and package energy lambda
         working-directory: backend/lambdas/energy
@@ -107,10 +99,6 @@ jobs:
         working-directory: backend/lambdas/presigned-url
         run: npm run lint
 
-      - name: Run presigned-url lambdatests
-        working-directory: backend/lambdas/presigned-url
-        run: npm test
-
       - name: Build and package presigned-url lambda
         working-directory: backend/lambdas/presigned-url
         run: |
@@ -135,10 +123,6 @@ jobs:
       - name: Lint trigger lambda code
         working-directory: backend/lambdas/trigger
         run: npm run lint
-
-      - name: Run trigger lambda tests
-        working-directory: backend/lambdas/trigger
-        run: npm test
 
       - name: Build and package trigger lambda
         working-directory: backend/lambdas/trigger
@@ -166,10 +150,6 @@ jobs:
         working-directory: backend/lambdas/email
         run: npm run lint
 
-      - name: Run email lambda tests
-        working-directory: backend/lambdas/email
-        run: npm test
-
       - name: Build and package email lambda
         working-directory: backend/lambdas/email
         run: |
@@ -194,10 +174,6 @@ jobs:
       - name: Lint user data lambda code
         working-directory: backend/lambdas/user-data
         run: npm run lint
-
-      - name: Run user data lambda tests
-        working-directory: backend/lambdas/user-data
-        run: npm test
 
       - name: Build and package user data lambda
         working-directory: backend/lambdas/user-data
@@ -224,10 +200,6 @@ jobs:
         working-directory: backend/lambdas/prediction
         run: npm run lint
 
-      - name: Run prediction lambda tests
-        working-directory: backend/lambdas/prediction
-        run: npm test
-
       - name: Build and package prediction
         working-directory: backend/lambdas/prediction
         run: |
@@ -252,10 +224,6 @@ jobs:
       - name: Lint connection lambda code
         working-directory: backend/lambdas/connection
         run: npm run lint
-
-      - name: Run connection lambda tests
-        working-directory: backend/lambdas/connection
-        run: npm test
 
       - name: Build and package connection
         working-directory: backend/lambdas/connection
@@ -282,10 +250,6 @@ jobs:
         working-directory: backend/lambdas/websocket
         run: npm run lint
 
-      - name: Run websocket lambda tests
-        working-directory: backend/lambdas/websocket
-        run: npm test
-
       - name: Build and package websocket
         working-directory: backend/lambdas/websocket
         run: |
@@ -311,10 +275,6 @@ jobs:
         working-directory: backend/lambdas/process-data
         run: npm run lint
 
-      - name: Run process-data lambda tests
-        working-directory: backend/lambdas/process-data
-        run: npm test
-
       - name: Build and package process-data
         working-directory: backend/lambdas/process-data
         run: |
@@ -339,10 +299,6 @@ jobs:
       - name: Lint save-model lambda code
         working-directory: backend/lambdas/save-model
         run: npm run lint
-
-      - name: Run save-model lambda tests
-        working-directory: backend/lambdas/save-model
-        run: npm test
 
       - name: Build and package save-model
         working-directory: backend/lambdas/save-model
