@@ -9,6 +9,7 @@ import { AlertsNotificationsComponent } from './components/alerts-notifications/
 import { NgIf } from '@angular/common';
 import { PredictionComponent } from './components/prediction/prediction.component';
 
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',

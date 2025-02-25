@@ -9,14 +9,16 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
       <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
     </div>
     <div class="modal-body">
-      <p>{{ message }}</p>
+      <p>{{ typeof message === 'string' ? message : JSON.stringify(message) }}</p>
     </div>
   `,
   standalone: true
 })
 export class ToastComponent {
   @Input() title: string = '';
-  @Input() message: string = '';
+  @Input() message: any = '';
 
   constructor(public activeModal: NgbActiveModal) {}
+
+  protected JSON = JSON;
 } 
