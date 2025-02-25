@@ -77,7 +77,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
               ChannelName = "validation"
               DataSource = {
                 S3DataSource = {
-                  S3Uri.$= "$.paths.validationPath"
+                  "S3Uri.$"= "$.paths.validationPath"
                   S3DataType = "S3Prefix"
                   S3DataDistributionType = "FullyReplicated"
                 }
