@@ -89,14 +89,4 @@ export class EnergyService {
       throw error;
     }
   }
-
-  public async trainModel(): Promise<void> {
-    try {
-      await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/model/train`, {})
-      );
-    } catch (error) {
-      throw error;
-    }
-  }
 } 

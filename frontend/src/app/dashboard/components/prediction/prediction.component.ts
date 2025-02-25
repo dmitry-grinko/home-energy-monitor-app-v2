@@ -26,7 +26,6 @@ export class PredictionComponent {
   loading: boolean = false;
   error: string = '';
   today: string = new Date().toISOString().split('T')[0];
-  trainingModel: boolean = false;
 
   constructor(private energyService: EnergyService) {}
 
@@ -48,11 +47,7 @@ export class PredictionComponent {
         this.error = err.error.message;
         
         // Handle special cases
-        if (err.error.requiresData) {
-          this.error = 'You need to upload at least 100 energy consumption records before making predictions.';
-        } else if (err.error.requiresRetrain) {
-          this.error = 'Your prediction model is being updated. Please try again in a few minutes.';
-        } else if (err.error.status) {
+        if (err.error.status) {
           this.error = `The prediction model is currently ${err.error.status}. Please try again in a few minutes.`;
         }
       } else if (err.status === 0) {
@@ -64,31 +59,6 @@ export class PredictionComponent {
       }
     } finally {
       this.loading = false;
-    }
-  }
-
-  async trainModel() {
-    this.trainingModel = true;
-    this.error = '';
-    
-    try {
-      await this.energyService.trainModel();
-      // Show success message in the existing error div
-      this.error = 'Model training started successfully. Please wait a few minutes before making predictions.';
-    } catch (err: any) {
-      console.error('Training error:', err);
-      
-      if (err.error) {
-        this.error = err.error.message || 'Failed to start model training.';
-      } else if (err.status === 0) {
-        this.error = 'Unable to connect to the server. Please check your internet connection.';
-      } else if (err.status === 401) {
-        this.error = 'Your session has expired. Please sign in again.';
-      } else {
-        this.error = 'Unable to start model training at this time. Please try again later.';
-      }
-    } finally {
-      this.trainingModel = false;
     }
   }
 } 
