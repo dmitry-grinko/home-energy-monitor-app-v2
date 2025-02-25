@@ -573,9 +573,27 @@ module "lambda_save_model" {
               "sagemaker:CreateEndpoint",
               "sagemaker:DescribeTrainingJob",
               "sagemaker:DeleteEndpoint",
-              "sagemaker:DeleteEndpointConfig"
+              "sagemaker:DeleteEndpointConfig",
+              "sagemaker:CreateModel"
             ]
             Resource = "*"
+          }
+        ]
+      })
+    },
+    {
+      name = "iam-pass-role"
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect = "Allow"
+            Action = [
+              "iam:PassRole"
+            ]
+            Resource = [
+              module.sagemaker.role_arn
+            ]
           }
         ]
       })
@@ -599,10 +617,12 @@ module "lambda_save_model" {
 
   environment_variables = {
     ENVIRONMENT = var.environment
+    SAGEMAKER_ROLE_ARN = module.sagemaker.role_arn
   }
 
   depends_on = [
-    aws_ssm_parameter.sagemaker_endpoint
+    aws_ssm_parameter.sagemaker_endpoint,
+    module.sagemaker
   ]
 }
 

@@ -1,4 +1,4 @@
-import { SageMakerClient, CreateEndpointConfigCommand, CreateEndpointCommand, DescribeTrainingJobCommand } from '@aws-sdk/client-sagemaker';
+import { SageMakerClient, CreateModelCommand, CreateEndpointConfigCommand, CreateEndpointCommand, DescribeTrainingJobCommand } from '@aws-sdk/client-sagemaker';
 import { SSMClient, PutParameterCommand } from '@aws-sdk/client-ssm';
 
 const sagemakerClient = new SageMakerClient({ region: 'us-east-1' });
@@ -29,6 +29,37 @@ const log = {
       } : error,
       lambda: 'save-model'
     }, null, 2));
+  }
+};
+
+const createModel = async (trainingJobName: string, modelArtifacts: string, roleArn: string): Promise<string> => {
+  const modelName = `model-${trainingJobName}`;
+  
+  log.info('Creating model', { 
+    modelName,
+    modelArtifacts 
+  });
+
+  try {
+    await sagemakerClient.send(new CreateModelCommand({
+      ModelName: modelName,
+      PrimaryContainer: {
+        Image: "382416733822.dkr.ecr.us-east-1.amazonaws.com/linear-learner:1",
+        ModelDataUrl: modelArtifacts,
+        Environment: {
+          SAGEMAKER_PROGRAM: "train",
+          SAGEMAKER_SUBMIT_DIRECTORY: "/opt/ml/model/code",
+          SAGEMAKER_CONTAINER_LOG_LEVEL: "20",
+          SAGEMAKER_REGION: "us-east-1"
+        }
+      },
+      ExecutionRoleArn: roleArn
+    }));
+
+    return modelName;
+  } catch (error) {
+    log.error('Failed to create model', error);
+    throw error;
   }
 };
 
@@ -91,29 +122,57 @@ const saveEndpointToParameterStore = async (endpointName: string): Promise<void>
 };
 
 export const handler = async (event: any): Promise<void> => {
-  log.info('Save Model lambda started', { event });
+  log.info('Save Model lambda started', { 
+    event,
+    environment: process.env.ENVIRONMENT,
+    sagemakerRoleArn: process.env.SAGEMAKER_ROLE_ARN 
+  });
 
   try {
     const trainingJobName = event.TrainingJobName;
+    const roleArn = process.env.SAGEMAKER_ROLE_ARN!;
 
     // Get training job details
+    log.info('Getting training job details', { trainingJobName });
     const trainingJob = await sagemakerClient.send(new DescribeTrainingJobCommand({
       TrainingJobName: trainingJobName
     }));
+
+    log.info('Training job details retrieved', {
+      modelArtifacts: trainingJob.ModelArtifacts,
+      trainingJobStatus: trainingJob.TrainingJobStatus,
+      failureReason: trainingJob.FailureReason
+    });
 
     if (!trainingJob.ModelArtifacts?.S3ModelArtifacts) {
       throw new Error('No model artifacts found');
     }
 
+    // Create model
+    log.info('Creating SageMaker model', {
+      modelArtifacts: trainingJob.ModelArtifacts.S3ModelArtifacts,
+      roleArn
+    });
+
+    const modelName = await createModel(
+      trainingJobName,
+      trainingJob.ModelArtifacts.S3ModelArtifacts,
+      roleArn
+    );
+
     // Create endpoint
-    const endpointName = await createEndpoint(trainingJobName);
+    log.info('Creating endpoint', { modelName });
+    const endpointName = await createEndpoint(modelName);
 
     // Save endpoint to Parameter Store
+    log.info('Saving endpoint to Parameter Store', { endpointName });
     await saveEndpointToParameterStore(endpointName);
 
     log.info('Save Model lambda completed successfully', {
       trainingJobName,
-      endpointName
+      modelName,
+      endpointName,
+      modelArtifacts: trainingJob.ModelArtifacts.S3ModelArtifacts
     });
   } catch (error) {
     log.error('Save Model lambda failed', error);
