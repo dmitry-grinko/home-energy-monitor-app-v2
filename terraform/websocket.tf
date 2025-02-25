@@ -1,7 +1,3 @@
-# Data source for current region
-data "aws_region" "current" {}
-
-# WebSocket API Gateway
 resource "aws_apigatewayv2_api" "websocket" {
   name                       = "${var.project-name}-websocket-v2"
   protocol_type              = "WEBSOCKET"
