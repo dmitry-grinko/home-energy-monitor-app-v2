@@ -14,6 +14,7 @@ const snsClient = new SNSClient({ region: 'us-east-1' });
 
 const tableName = process.env.TABLE_NAME;
 const snsTopicArn = process.env.SNS_TOPIC_ARN;
+const snsWebsocketTopicArn = process.env.SNS_WEBSOCKET_TOPIC_ARN;
 
 if (!tableName) {
   throw new Error('TABLE_NAME environment variable is not set');
@@ -21,6 +22,10 @@ if (!tableName) {
 
 if (!snsTopicArn) {
   throw new Error('SNS_TOPIC_ARN environment variable is not set');
+}
+
+if (!snsWebsocketTopicArn) {
+  throw new Error('SNS_WEBSOCKET_TOPIC_ARN environment variable is not set'); // TODO: Implement this logic later
 }
 
 interface CsvRow {
