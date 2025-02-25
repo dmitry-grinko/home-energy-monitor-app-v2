@@ -1,9 +1,9 @@
-import { APIGatewayProxyEvent, APIGatewayProxyEventV2, APIGatewayProxyResult, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyEventV2, APIGatewayProxyResult, APIGatewayProxyResultV2, APIGatewayProxyHandler } from 'aws-lambda';
 import { DynamoDBClient, PutItemCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
-const ddbClient = new DynamoDBClient({ region: 'us-east-1' });
+const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION });
 
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE!;
 const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID!;
@@ -119,107 +119,60 @@ const validateTokensAndGetUserId = (headers: Record<string, string | undefined>)
 const handleConnect = async (connectionId: string, userId: string): Promise<void> => {
   log.info('Handling connection', { connectionId, userId });
 
-  try {
-    const ttl = Math.floor(Date.now() / 1000) + (24 * 60 * 60);
+  const ttl = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours from now
 
-    const item: ConnectionRecord = {
-      UserId: userId,
-      ConnectionId: connectionId,
-      TTL: ttl,
-      CreatedAt: new Date().toISOString()
-    };
+  const item: ConnectionRecord = {
+    UserId: userId,
+    ConnectionId: connectionId,
+    TTL: ttl,
+    CreatedAt: new Date().toISOString()
+  };
 
-    log.info('Saving connection record', { item });
-
-    await ddbClient.send(new PutItemCommand({
-      TableName: CONNECTIONS_TABLE,
-      Item: marshall(item, { removeUndefinedValues: true })
-    }));
-
-    log.info('Connection record saved successfully');
-  } catch (error) {
-    log.error('Failed to save connection record', error);
-    throw error;
-  }
+  await ddbClient.send(new PutItemCommand({
+    TableName: CONNECTIONS_TABLE,
+    Item: marshall(item)
+  }));
 };
 
 const handleDisconnect = async (connectionId: string): Promise<void> => {
   log.info('Handling disconnection', { connectionId });
 
-  try {
-    await ddbClient.send(new DeleteItemCommand({
-      TableName: CONNECTIONS_TABLE,
-      Key: marshall({
-        ConnectionId: connectionId
-      })
-    }));
-
-    log.info('Connection record deleted successfully');
-  } catch (error) {
-    log.error('Failed to delete connection record', error);
-    throw error;
-  }
+  await ddbClient.send(new DeleteItemCommand({
+    TableName: CONNECTIONS_TABLE,
+    Key: marshall({
+      ConnectionId: connectionId
+    })
+  }));
 };
 
-export const handler = async (
-  event: APIGatewayProxyEvent | APIGatewayProxyEventV2
-): Promise<APIGatewayProxyResult | APIGatewayProxyResultV2> => {
-  log.info('Lambda invoked', {
-    routeKey: event.requestContext.routeKey,
-    requestId: event.requestContext.requestId
-  });
+export const handler: APIGatewayProxyHandler = async (event) => {
+  if (!event.requestContext.connectionId) {
+    return { statusCode: 400, body: 'Missing connection ID' };
+  }
 
+  const connectionId = event.requestContext.connectionId;
+  const routeKey = event.requestContext.routeKey;
+  
   try {
-    const routeKey = event.requestContext.routeKey;
-    const connectionId = 'connectionId' in event.requestContext 
-      ? (event.requestContext as any).connectionId 
-      : undefined;
-
-    log.info('Processing request', { routeKey, connectionId });
-
-    if (!connectionId) {
-      log.error('Missing connection ID');
-      throw new Error('Missing connection ID');
-    }
-
     switch (routeKey) {
-      case '$connect': {
-        const userId = validateTokensAndGetUserId(event.headers);
-        await handleConnect(connectionId, userId);
-        log.info('Connection successful', { connectionId, userId });
-        return {
-          statusCode: 200,
-          headers: corsHeaders,
-          body: JSON.stringify({ message: 'Connected successfully' })
-        };
-      }
+      case '$connect':
+        const userId = event.requestContext.authorizer?.jwt?.claims?.sub;
+        if (!userId) {
+          return { statusCode: 401, body: 'Unauthorized' };
+        }
 
-      case '$disconnect': {
+        await handleConnect(connectionId, userId);
+        return { statusCode: 200, body: 'Connected' };
+
+      case '$disconnect':
         await handleDisconnect(connectionId);
-        log.info('Disconnection successful', { connectionId });
-        return {
-          statusCode: 200,
-          headers: corsHeaders,
-          body: JSON.stringify({ message: 'Disconnected successfully' })
-        };
-      }
+        return { statusCode: 200, body: 'Disconnected' };
 
       default:
-        log.error('Unsupported route', { routeKey });
-        return {
-          statusCode: 400,
-          headers: corsHeaders,
-          body: JSON.stringify({ message: 'Unsupported route' })
-        };
+        return { statusCode: 400, body: 'Unsupported route' };
     }
   } catch (error) {
-    log.error('Request processing failed', error);
-    return {
-      statusCode: error instanceof Error && error.message.includes('token') ? 401 : 500,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        message: error instanceof Error ? error.message : 'Internal Server Error'
-      })
-    };
+    log.error('Error handling connection', error);
+    return { statusCode: 500, body: 'Internal server error' };
   }
 };

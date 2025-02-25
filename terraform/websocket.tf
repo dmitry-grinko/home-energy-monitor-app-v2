@@ -50,7 +50,8 @@ resource "aws_apigatewayv2_route" "websocket_connect" {
   api_id             = aws_apigatewayv2_api.websocket.id
   route_key          = "$connect"
   target             = "integrations/${aws_apigatewayv2_integration.websocket_connect.id}"
-  authorization_type = "AWS_IAM"
+  authorizer_id      = aws_apigatewayv2_authorizer.websocket.id
+  authorization_type = "JWT"
 }
 
 resource "aws_apigatewayv2_route" "websocket_disconnect" {
@@ -158,6 +159,19 @@ resource "aws_lambda_permission" "apigateway_websocket" {
   source_arn    = "${aws_apigatewayv2_api.websocket.execution_arn}/*"
 }
 
+# Add Cognito authorizer
+resource "aws_apigatewayv2_authorizer" "websocket" {
+  api_id           = aws_apigatewayv2_api.websocket.id
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.querystring.auth"]
+  name             = "cognito-authorizer"
+
+  jwt_configuration {
+    audience = [module.cognito.client_id]
+    issuer   = "https://cognito-idp.${data.aws_region.current.name}.amazonaws.com/${module.cognito.user_pool_id}"
+  }
+}
+
 # Outputs
 output "websocket_api_endpoint" {
   description = "WebSocket API endpoint URL"
@@ -172,4 +186,28 @@ output "websocket_api_id" {
 output "websocket_api_execution_arn" {
   description = "WebSocket API execution ARN"
   value       = aws_apigatewayv2_api.websocket.execution_arn
+}
+
+resource "aws_dynamodb_table" "websocket_connections" {
+  name         = "${var.project-name}-websocket-connections"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "UserId"
+  range_key    = "ConnectionId"
+
+  attribute {
+    name = "UserId"
+    type = "S"
+  }
+
+  attribute {
+    name = "ConnectionId"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = "TTL"
+    enabled        = true
+  }
+
+  tags = local.tags
 } 

@@ -37,8 +37,7 @@ export class WebSocketService implements OnDestroy {
     }
 
     const idToken = this.authService.getIdToken();
-    console.log('[WebSocketService] Attempting to connect with token:', idToken ? 'Token present' : 'No token');
-    const wsUrl = `${environment.webSocketUrl}?token=${idToken}`;
+    const wsUrl = `${environment.webSocketUrl}?auth=${idToken}`;
     console.log('[WebSocketService] Connecting to:', wsUrl);
 
     try {

@@ -47,17 +47,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     // Subscribe to messages
     this.wsSubscription = this.webSocketService.messages$.subscribe(message => {
-      console.log('[DashboardComponent] Received WebSocket message:', {
-        type: message.type,
-        timestamp: message.timestamp,
-        data: message.data
-      });
-      
-      // Show toast notification for the message
-      console.log('[DashboardComponent] Opening toast notification');
-      const modalRef = this.modalService.open(ToastComponent);
-      modalRef.componentInstance.title = message.type;
-      modalRef.componentInstance.message = message.data;
+      console.log('[DashboardComponent] Received WebSocket message:', message);
+      // Let the ToastComponent handle the messages through its own subscription
+      // Remove the modal handling code
     });
 
     // Monitor connection status

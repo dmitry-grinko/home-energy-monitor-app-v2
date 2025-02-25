@@ -252,11 +252,12 @@ resource "aws_iam_role_policy" "sagemaker_ecr_policy" {
       {
         Effect = "Allow"
         Action = [
+          "ecr:GetAuthorizationToken",
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
           "ecr:BatchCheckLayerAvailability"
         ]
-        Resource = "arn:aws:ecr:us-east-1:*:repository/*"
+        Resource = "*"
       }
     ]
   })

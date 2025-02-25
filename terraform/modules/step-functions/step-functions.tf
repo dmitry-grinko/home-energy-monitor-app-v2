@@ -56,7 +56,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
         Parameters = {
           TrainingJobName = "training-${substr(uuid(), 0, 8)}"
           AlgorithmSpecification = {
-            TrainingImage = "433757028032.dkr.ecr.us-east-1.amazonaws.com/xgboost:1"
+            TrainingImage = "683313688378.dkr.ecr.us-east-1.amazonaws.com/sagemaker-xgboost:1.5-1"
             TrainingInputMode = "File"
           }
           RoleArn = var.sagemaker_role_arn
