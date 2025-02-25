@@ -5,7 +5,7 @@ module "sns-email-topic" {
 }
 
 # sns-email-topic invokes the email lambda
-resource "aws_lambda_permission" "sns" {
+resource "aws_lambda_permission" "sns-email" {
   statement_id  = "AllowSNSInvoke"
   action        = "lambda:InvokeFunction"
   function_name = module.lambda_email.function_name
@@ -27,7 +27,7 @@ module "sns-websocket-topic" {
 }
 
 # sns-websocket-topic invokes the websocket lambda
-resource "aws_lambda_permission" "sns" {
+resource "aws_lambda_permission" "sns-websocket" {
   statement_id  = "AllowSNSInvoke"
   action        = "lambda:InvokeFunction"
   function_name = module.lambda_websocket.function_name
