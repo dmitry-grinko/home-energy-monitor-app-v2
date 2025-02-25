@@ -75,53 +75,79 @@ const getAllEnergyData = async (): Promise<EnergyUsageRecord[]> => {
   return records;
 };
 
-const processDataForSageMaker = (records: EnergyUsageRecord[]): string => {
+const processDataForSageMaker = (records: EnergyUsageRecord[]): { training: string, validation: string } => {
   log.info('Processing data for SageMaker', { recordCount: records.length });
 
   // Sort by date
   const sortedRecords = records.sort((a, b) => a.Date.localeCompare(b.Date));
 
-  // Create CSV content
-  const csvRows = [
-    'date,usage',  // header
-    ...sortedRecords.map(record => `${record.Date},${record.EnergyUsage}`)
-  ];
+  // Split data - 80% training, 20% validation
+  const splitIndex = Math.floor(sortedRecords.length * 0.8);
+  const trainingRecords = sortedRecords.slice(0, splitIndex);
+  const validationRecords = sortedRecords.slice(splitIndex);
 
-  return csvRows.join('\n');
+  log.info('Split data', {
+    totalRecords: records.length,
+    trainingCount: trainingRecords.length,
+    validationCount: validationRecords.length
+  });
+
+  // Create CSV header and content
+  const csvHeader = 'date,usage';
+  const trainingCsv = [
+    csvHeader,
+    ...trainingRecords.map(record => `${record.Date},${record.EnergyUsage}`)
+  ].join('\n');
+
+  const validationCsv = [
+    csvHeader,
+    ...validationRecords.map(record => `${record.Date},${record.EnergyUsage}`)
+  ].join('\n');
+
+  return { training: trainingCsv, validation: validationCsv };
 };
 
-const saveToS3 = async (data: string): Promise<string> => {
-  // Use a fixed key instead of timestamp-based
-  const key = 'model/training-data.csv';
+const saveToS3 = async (data: { training: string, validation: string }): Promise<{ training: string, validation: string }> => {
+  const trainingKey = 'model/training-data.csv';
+  const validationKey = 'model/validation-data.csv';
 
   log.info('Saving data to S3', {
     bucket: BUCKET_NAME,
-    key,
-    dataSize: data.length
+    trainingSize: data.training.length,
+    validationSize: data.validation.length
   });
 
   try {
+    // Save training data
     await s3Client.send(new PutObjectCommand({
       Bucket: BUCKET_NAME,
-      Key: key,
-      Body: data,
+      Key: trainingKey,
+      Body: data.training,
       ContentType: 'text/csv'
     }));
 
-    const s3Uri = `s3://${BUCKET_NAME}/${key}`;
-    log.info('Data saved successfully', { s3Uri });
-    return s3Uri;
+    // Save validation data
+    await s3Client.send(new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: validationKey,
+      Body: data.validation,
+      ContentType: 'text/csv'
+    }));
+
+    return {
+      training: `s3://${BUCKET_NAME}/${trainingKey}`,
+      validation: `s3://${BUCKET_NAME}/${validationKey}`
+    };
   } catch (error) {
     log.error('Error saving to S3', error);
     throw error;
   }
 };
 
-export const handler = async (): Promise<{ s3Path: string }> => {
+export const handler = async (): Promise<{ trainingPath: string, validationPath: string }> => {
   log.info('Process Data lambda started');
 
   try {
-    // Get all energy usage data
     const records = await getAllEnergyData();
     
     if (records.length === 0) {
@@ -129,15 +155,18 @@ export const handler = async (): Promise<{ s3Path: string }> => {
       throw new Error('No energy usage data found');
     }
 
-    // Process data for SageMaker
+    // Process and split data
     const processedData = processDataForSageMaker(records);
 
-    // Save to S3
-    const s3Path = await saveToS3(processedData);
+    // Save both datasets to S3
+    const paths = await saveToS3(processedData);
 
-    log.info('Process Data lambda completed successfully', { s3Path });
+    log.info('Process Data lambda completed successfully', paths);
 
-    return { s3Path };
+    return {
+      trainingPath: paths.training,
+      validationPath: paths.validation
+    };
   } catch (error) {
     log.error('Process Data lambda failed', error);
     throw error;

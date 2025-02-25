@@ -9,6 +9,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
       ProcessData = {
         Type = "Task"
         Resource = var.process_data_lambda_arn
+        ResultPath = "$.paths"
         Next = "NotifyProcessDataComplete"
         Retry = [
           {
@@ -54,7 +55,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
         Type = "Task"
         Resource = "arn:aws:states:::sagemaker:createTrainingJob.sync"
         Parameters = {
-          TrainingJobName = "training-${substr(uuid(), 0, 8)}"
+          TrainingJobName = "training-${uuid()}"
           AlgorithmSpecification = {
             TrainingImage = "683313688378.dkr.ecr.us-east-1.amazonaws.com/sagemaker-xgboost:1.5-1"
             TrainingInputMode = "File"
@@ -65,7 +66,18 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
               ChannelName = "train"
               DataSource = {
                 S3DataSource = {
-                  S3Uri = "s3://${var.bucket_name}/model/training-data.csv"
+                  "S3Uri.$" = "$.paths.trainingPath"
+                  S3DataType = "S3Prefix"
+                  S3DataDistributionType = "FullyReplicated"
+                }
+              }
+              ContentType = "text/csv"
+            },
+            {
+              ChannelName = "validation"
+              DataSource = {
+                S3DataSource = {
+                  S3Uri.$= "$.paths.validationPath"
                   S3DataType = "S3Prefix"
                   S3DataDistributionType = "FullyReplicated"
                 }
@@ -80,6 +92,22 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             InstanceCount = 1
             InstanceType = "ml.m4.xlarge"
             VolumeSizeInGB = 10
+          }
+          HyperParameters = {
+            "objective"           = "reg:squarederror"
+            "num_round"          = "100"
+            "max_depth"          = "3"
+            "eta"                = "0.2"
+            "gamma"              = "4"
+            "min_child_weight"   = "6"
+            "subsample"          = "0.7"
+            "verbosity"          = "2"
+            "eval_metric"        = "rmse"
+            "nthread"            = "4"
+            "silent"             = "0"
+            "csv_weights"        = "0"
+            "num_class"          = "1"
+            "early_stopping_rounds" = "10"
           }
           StoppingCondition = {
             MaxRuntimeInSeconds = 3600
