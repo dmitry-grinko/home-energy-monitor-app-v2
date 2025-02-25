@@ -621,7 +621,6 @@ module "lambda_save_model" {
   }
 
   depends_on = [
-    aws_ssm_parameter.sagemaker_endpoint,
     module.sagemaker
   ]
 }
