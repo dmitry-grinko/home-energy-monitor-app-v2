@@ -139,7 +139,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             }
           }
         }
-        ResultPath = "$.notificationResult"
+        ResultPath = null
         Next = "SaveModel"
         Retry = [
           {
@@ -184,7 +184,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             }
           }
         }
-        ResultPath = "$.notificationResult"
+        ResultPath = null
         End = true
         Retry = [
           {
@@ -212,7 +212,7 @@ resource "aws_sfn_state_machine" "ml_pipeline" {
             }
           }
         }
-        ResultPath = "$.notificationResult"
+        ResultPath = null
         Next = "HandleError"
         Retry = [
           {

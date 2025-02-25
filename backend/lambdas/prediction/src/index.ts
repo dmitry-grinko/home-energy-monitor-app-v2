@@ -200,9 +200,16 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
       responseLength: rawResponse.length
     });
 
-    const prediction = parseFloat(rawResponse);
+    // Raw SageMaker response: {
+    //   rawResponse: '{"predictions": [{"score": 129.01388549804688}]}',
+    //   responseType: 'string',
+    //   responseLength: 48
+    // }
+
+    const parsedResponse = JSON.parse(rawResponse);
+    const prediction = parsedResponse?.predictions?.[0]?.score;
     
-    if (isNaN(prediction)) {
+    if (typeof prediction !== 'number' || isNaN(prediction)) {
       console.error('Invalid prediction value:', {
         rawResponse,
         parsed: prediction
