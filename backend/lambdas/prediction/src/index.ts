@@ -1,17 +1,15 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { SageMakerRuntimeClient, InvokeEndpointCommand, ValidationError } from '@aws-sdk/client-sagemaker-runtime';
 import { SageMakerClient, DescribeEndpointCommand, EndpointStatus } from '@aws-sdk/client-sagemaker';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
-const ddbClient = new DynamoDBClient();
-const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
 const sagemakerRuntime = new SageMakerRuntimeClient();
 const sagemakerClient = new SageMakerClient();
+const ssmClient = new SSMClient();
 
-const USER_DATA_TABLE = process.env.USER_DATA_TABLE!;
 const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID!;
+const SAGEMAKER_ENDPOINT_PARAM = process.env.SAGEMAKER_ENDPOINT!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,6 +38,30 @@ async function checkEndpointStatus(endpointName: string): Promise<EndpointStatus
   }
 }
 
+async function getEndpointName(): Promise<string> {
+  try {
+    const response = await ssmClient.send(new GetParameterCommand({
+      Name: SAGEMAKER_ENDPOINT_PARAM
+    }));
+    
+    if (!response.Parameter?.Value) {
+      throw new Error('No endpoint found in Parameter Store');
+    }
+    
+    return response.Parameter.Value;
+  } catch (error) {
+    console.error('Error getting endpoint from SSM:', error);
+    throw error;
+  }
+}
+
+function getDayOfYear(date: Date): number {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  return Math.floor(diff / oneDay);
+}
+
 export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
   console.log('Prediction lambda invoked with event:', {
     httpMethod: event.httpMethod,
@@ -61,11 +83,6 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
     const idToken = event.headers['x-id-token'];
     const accessToken = event.headers.authorization?.replace('Bearer ', '');
 
-    console.log('Validating tokens:', {
-      hasIdToken: !!idToken,
-      hasAccessToken: !!accessToken
-    });
-
     if (!idToken || !accessToken) {
       return {
         statusCode: 401,
@@ -77,12 +94,6 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
     // Decode and validate both tokens
     const idTokenPayload: JwtPayload = jwt.decode(idToken, { complete: true })?.payload as JwtPayload;
     const accessTokenPayload: JwtPayload = jwt.decode(accessToken, { complete: true })?.payload as JwtPayload;
-
-    console.log('Token payloads:', {
-      idTokenIss: idTokenPayload?.iss,
-      accessTokenIss: accessTokenPayload?.iss,
-      expectedIss: `https://cognito-idp.us-east-1.amazonaws.com/${COGNITO_USER_POOL_ID}`
-    });
 
     if (!idTokenPayload || !accessTokenPayload) {
       return {
@@ -120,10 +131,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
       };
     }
 
-    const userId = idTokenPayload.sub;
-    console.log('Authenticated user:', { userId });
-
-    // Rest of your existing prediction logic
+    // Validate date parameter
     if (!event.queryStringParameters?.date || isNaN(new Date(event.queryStringParameters.date).getTime())) {
       return {
         statusCode: 400,
@@ -132,41 +140,20 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
       };
     }
 
-    // Get user's endpoint from DynamoDB
-    const userDataResponse = await ddbDocClient.send(new GetCommand({
-      TableName: USER_DATA_TABLE,
-      Key: { UserId: userId }
-    }));
+    // Get endpoint name from SSM
+    const endpointName = await getEndpointName();
+    console.log('Retrieved endpoint name from SSM:', endpointName);
 
-    console.log('User data from DynamoDB:', {
-      hasData: !!userDataResponse.Item,
-      endpoint: userDataResponse.Item?.sagemakerEndpoint,
-      trainingStartDate: userDataResponse.Item?.trainingStartDate
-    });
-
-    const endpointName = userDataResponse.Item?.sagemakerEndpoint;
-    if (!endpointName) {
-      return {
-        statusCode: 404,
-        headers: corsHeaders,
-        body: JSON.stringify({ 
-          message: 'No trained model found. Please upload at least 100 energy consumption records to train the prediction model.',
-          requiresData: true 
-        })
-      };
-    }
-
-    // Check endpoint status before invoking
+    // Check endpoint status
     const endpointStatus = await checkEndpointStatus(endpointName);
     console.log('Endpoint status:', { endpointName, status: endpointStatus });
 
     if (!endpointStatus) {
-      // Endpoint doesn't exist
       return {
         statusCode: 404,
         headers: corsHeaders,
         body: JSON.stringify({ 
-          message: 'Prediction model needs to be retrained. Please try again in a few minutes.',
+          message: 'Prediction model not found. Please try again in a few minutes.',
           requiresRetrain: true 
         })
       };
@@ -183,34 +170,29 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
       };
     }
 
-    // Convert prediction date to days since first training date
+    // Calculate day of year for the prediction date
     const predictionDate = new Date(event.queryStringParameters.date);
-    const trainingStartDate = new Date(userDataResponse.Item?.trainingStartDate || predictionDate);
-    const daysSinceStart = (predictionDate.getTime() - trainingStartDate.getTime()) / (1000 * 60 * 60 * 24);
+    const dayOfYear = getDayOfYear(predictionDate);
 
     console.log('Prediction calculation:', {
       predictionDate: predictionDate.toISOString(),
-      trainingStartDate: trainingStartDate.toISOString(),
-      daysSinceStart
-    });
-
-    // Prepare input in the same format as training data
-    const input = `${daysSinceStart}`;
-
-    console.log('Invoking SageMaker endpoint:', {
-      endpointName,
-      input,
-      contentType: 'text/csv'
+      dayOfYear
     });
 
     // Invoke SageMaker endpoint
+    console.log('Invoking SageMaker endpoint:', {
+      endpointName,
+      input: dayOfYear.toString(),
+      contentType: 'text/csv'
+    });
+
     const response = await sagemakerRuntime.send(new InvokeEndpointCommand({
       EndpointName: endpointName,
       ContentType: 'text/csv',
-      Body: input
+      Body: dayOfYear.toString()
     }));
 
-    // Add detailed logging of the raw response
+    // Parse the prediction result
     const rawResponse = Buffer.from(response.Body as Uint8Array).toString('utf-8');
     console.log('Raw SageMaker response:', {
       rawResponse,
@@ -218,7 +200,6 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
       responseLength: rawResponse.length
     });
 
-    // Parse the prediction result with validation
     const prediction = parseFloat(rawResponse);
     
     if (isNaN(prediction)) {
@@ -234,12 +215,6 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
         })
       };
     }
-
-    console.log('Prediction result:', {
-      rawResponse,
-      rawPrediction: prediction,
-      roundedPrediction: Math.round(prediction)
-    });
 
     const result: PredictionResponse = {
       date: event.queryStringParameters.date,
@@ -259,7 +234,6 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
       stack: (error as Error).stack
     });
 
-    // Handle specific error types
     if (error instanceof ValidationError) {
       return {
         statusCode: 404,
@@ -271,24 +245,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<any> => {
       };
     }
 
-    // Handle token validation errors
     if ((error as Error).message.includes('token')) {
       return {
         statusCode: 401,
         headers: corsHeaders,
         body: JSON.stringify({ 
           message: 'Your session has expired. Please sign in again.'
-        })
-      };
-    }
-
-    // Handle SageMaker service errors
-    if ((error as Error).message.includes('SageMaker')) {
-      return {
-        statusCode: 503,
-        headers: corsHeaders,
-        body: JSON.stringify({ 
-          message: 'The prediction service is temporarily unavailable. Please try again in a few minutes.'
         })
       };
     }

@@ -370,23 +370,6 @@ module "lambda_prediction" {
 
   additional_policies = [
     {
-      name = "dynamodb-access"
-      policy = jsonencode({
-        Version = "2012-10-17"
-        Statement = [
-          {
-            Effect = "Allow"
-            Action = [
-              "dynamodb:GetItem"
-            ]
-            Resource = [
-              module.dynamodb_user_data.table_arn
-            ]
-          }
-        ]
-      })
-    },
-    {
       name = "sagemaker-runtime"
       policy = jsonencode({
         Version = "2012-10-17"
@@ -420,7 +403,6 @@ module "lambda_prediction" {
   ]
 
   environment_variables = {
-    USER_DATA_TABLE      = module.dynamodb_user_data.table_name
     COGNITO_USER_POOL_ID = module.cognito.user_pool_id
     SAGEMAKER_ENDPOINT   = "/${var.environment}/sagemaker/endpoint-url"
     ENVIRONMENT          = var.environment
