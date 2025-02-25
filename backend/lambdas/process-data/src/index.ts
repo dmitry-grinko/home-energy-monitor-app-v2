@@ -81,24 +81,32 @@ const processDataForSageMaker = (records: EnergyUsageRecord[]): { training: stri
   // Sort by date
   const sortedRecords = records.sort((a, b) => a.Date.localeCompare(b.Date));
 
+  // Convert dates to numerical values (days since first date)
+  const firstDate = new Date(sortedRecords[0].Date);
+  const processedRecords = sortedRecords.map(record => ({
+    ...record,
+    daysSinceStart: Math.floor((new Date(record.Date).getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
+  }));
+
   // Split data - 80% training, 20% validation
-  const splitIndex = Math.floor(sortedRecords.length * 0.8);
-  const trainingRecords = sortedRecords.slice(0, splitIndex);
-  const validationRecords = sortedRecords.slice(splitIndex);
+  const splitIndex = Math.floor(processedRecords.length * 0.8);
+  const trainingRecords = processedRecords.slice(0, splitIndex);
+  const validationRecords = processedRecords.slice(splitIndex);
 
   log.info('Split data', {
     totalRecords: records.length,
     trainingCount: trainingRecords.length,
-    validationCount: validationRecords.length
+    validationCount: validationRecords.length,
+    firstDate: firstDate.toISOString()
   });
 
-  // Create CSV content without headers for Linear Learner
+  // Create CSV content without headers - using numerical dates
   const trainingCsv = trainingRecords
-    .map(record => `${record.Date},${record.EnergyUsage}`)
+    .map(record => `${record.daysSinceStart},${record.EnergyUsage}`)
     .join('\n');
 
   const validationCsv = validationRecords
-    .map(record => `${record.Date},${record.EnergyUsage}`)
+    .map(record => `${record.daysSinceStart},${record.EnergyUsage}`)
     .join('\n');
 
   return { training: trainingCsv, validation: validationCsv };
