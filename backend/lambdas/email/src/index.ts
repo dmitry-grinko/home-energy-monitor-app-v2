@@ -93,7 +93,7 @@ async function sendAlertEmail(email: string, threshold: number, latestUsage: any
 
 Your latest energy reading of ${latestUsage.EnergyUsage} kWh (recorded on ${new Date(latestUsage.Date).toLocaleDateString()}) exceeds your alert threshold of ${threshold} kWh.
 
-💡 Visit https://pge.dmitrygrinko.com to view your complete energy usage history and manage your alert settings.`
+💡 Visit https://home-energy-monitor-app.dmitrygrinko.com to view your complete energy usage history and manage your alert settings.`
         }
       }
     }
