@@ -2,7 +2,7 @@
 
 ## Architecture Diagram
 
-![Architecture](https://raw.githubusercontent.com/dmitry-grinko/home-energy-monitor-app/refs/heads/main/architecture.png)
+![Architecture](https://raw.githubusercontent.com/dmitry-grinko/home-energy-monitor-app-v2/refs/heads/main/architecture.png)
 
 ## Description
 
