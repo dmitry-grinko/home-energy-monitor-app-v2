@@ -1,6 +1,6 @@
 variable "website_domain" {
   type        = string
-  description = "The domain name for the website."
+  description = "Domain name for the website"
 }
 
 variable "bucket_regional_domain_name" {
@@ -10,7 +10,7 @@ variable "bucket_regional_domain_name" {
 
 variable "acm_certificate_arn" {
   type        = string
-  description = "The ARN of the ACM certificate to use for the CloudFront distribution"
+  description = "ARN of ACM certificate for the domain"
 }
 
 variable "tags" {
