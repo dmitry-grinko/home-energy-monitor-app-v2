@@ -8,6 +8,12 @@ delete_s3_bucket() {
         return 1
     fi
 
+    # Check if bucket exists
+    if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+        echo "⚠️ Bucket $BUCKET_NAME does not exist. Skipping deletion."
+        return 0
+    fi
+
     echo "🔄 Deleting all objects from bucket: $BUCKET_NAME"
 
     # Delete all objects (non-versioned)
