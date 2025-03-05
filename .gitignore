@@ -19,4 +19,8 @@ backend/lambdas/training/lambda-presigned-url.zip
 backend/lambdas/training/lambda-training.zip
 backend/lambdas/training/lambda-trigger.zip
 
-scripts/
+# scripts/cleanup.sh
+scripts/squash-commits.sh
+scripts/reset.sh
+scripts/invalidation.sh
+scripts/reset-endpoints.sh
